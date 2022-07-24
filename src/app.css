@@ -1,0 +1,12 @@
+* {}
+
+body {
+  font-family: sans-serif;
+  margin: 0;
+}
+
+.flex {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

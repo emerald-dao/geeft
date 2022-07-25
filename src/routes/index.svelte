@@ -13,7 +13,7 @@
 </script>
 
 <svelte:head>
-	<title>Home</title>
+	<title>Geeft</title>
 </svelte:head>
 
 <button on:click={setup}>Setup</button>

@@ -40,6 +40,36 @@ export const contractData = {
         mainnet: "0x2d4c3caffbeab845"
       }
     },
+    GoatedGoats: {
+      storagePath: "GoatCollection",
+      publicPath: "GoatCollection",
+      collectionPublic: "GoatCollectionPublic",
+      networks: {
+        emulator: "",
+        testnet: "",
+        mainnet: "0x2068315349bdfce5"
+      }
+    },
+    Flovatar: {
+      storagePath: "FlovatarCollection",
+      publicPath: "FlovatarCollection",
+      collectionPublic: "CollectionPublic",
+      networks: {
+        emulator: "",
+        testnet: "",
+        mainnet: "0x921ea449dffec68a"
+      }
+    },
+    FlovatarComponent: {
+      storagePath: "FlovatarComponentCollection",
+      publicPath: "FlovatarComponentCollection",
+      collectionPublic: "CollectionPublic",
+      networks: {
+        emulator: "",
+        testnet: "",
+        mainnet: "0x921ea449dffec68a"
+      }
+    }
   },
   Token: {
     FlowToken: {

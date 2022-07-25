@@ -61,5 +61,10 @@
     .flex-container {
       flex-direction: row;
     }
+
+    a,
+    p {
+      font-size: 12px;
+    }
   }
 </style>

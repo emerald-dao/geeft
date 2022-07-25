@@ -44,7 +44,7 @@
 
   .flex-container {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
     gap: 2em;

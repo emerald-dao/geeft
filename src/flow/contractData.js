@@ -70,7 +70,7 @@ export const contractData = {
         mainnet: "0x921ea449dffec68a"
       }
     },
-    Driverz: {
+    DriverzNFT: {
       storagePath: "DriverzNFTCollection",
       publicPath: "DriverzNFTCollection",
       collectionPublic: "CollectionPublic",
@@ -83,11 +83,21 @@ export const contractData = {
     Bl0x: {
       storagePath: "bl0xNFTs",
       publicPath: "bl0xNFTs",
-      collectionPublic: "",
+      collectionPublic: null,
       networks: {
         emulator: "",
         testnet: "",
         mainnet: "0x7620acf6d7f2468a"
+      }
+    },
+    BarterYardClubWerewolf: {
+      storagePath: "BarterYardClubWerewolfCollection",
+      publicPath: "BarterYardClubWerewolfCollection",
+      collectionPublic: null,
+      networks: {
+        emulator: "",
+        testnet: "",
+        mainnet: "0x28abb9f291cadaf2"
       }
     }
   },

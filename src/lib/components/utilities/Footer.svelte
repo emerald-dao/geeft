@@ -57,11 +57,11 @@
     color: white;
   }
 
-  @media (min-width: 50em) {
+  /* @media (min-width: 50em) {
     .flex-container {
       flex-direction: row;
     }
-  }
+  } */
 
   @media all and (max-width: 1000px) {
     a,

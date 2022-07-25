@@ -1,14 +1,14 @@
 <script>
 	import { user } from "../flow/stores.js";
-	import CollectionSelector from "$lib/components/CollectionSelector.svelte";
-	import NFTDisplay from "$lib/components/NFTDisplay.svelte";
+	import Selector from "$lib/components/Selector.svelte";
+	import Display from "$lib/components/Display.svelte";
 	import { discover, setup } from "../flow/actions.js";
 	import ViewSelected from "$lib/components/ViewSelected.svelte";
 	import Send from "$lib/components/Send.svelte";
 
-	let collections = {};
+	let discovered = {};
 	$: if ($user) {
-		collections = discover($user.addr);
+		discovered = discover($user.addr);
 	}
 </script>
 
@@ -16,18 +16,24 @@
 	<title>Home</title>
 </svelte:head>
 
-<!-- <button on:click={setup}>Setup</button> -->
+<button on:click={setup}>Setup</button>
 
 <div class="main">
 	{#if !$user.loggedIn}
 		<article>Please connect your wallet.</article>
 	{:else}
-		{#await collections then collections}
+		{#await discovered then discovered}
 			<div class="select">
-				<CollectionSelector collections={Object.keys(collections)} />
-				<NFTDisplay {collections} />
+				<Selector
+					collections={Object.keys(discovered.collections)}
+					tokens={Object.keys(discovered.vaults)} />
+				<Display
+					collections={discovered.collections}
+					tokens={discovered.vaults} />
 			</div>
-			<ViewSelected {collections} />
+			<ViewSelected
+				collections={discovered.collections}
+				tokens={discovered.vaults} />
 			<Send />
 		{/await}
 	{/if}
@@ -54,6 +60,7 @@
 	@media all and (max-width: 1000px) {
 		.select {
 			flex-direction: column;
+			height: 100vh;
 		}
 	}
 </style>

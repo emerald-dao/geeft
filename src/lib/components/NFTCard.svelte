@@ -1,23 +1,26 @@
 <script>
-  import { selected } from "../stores/CreationStore.js";
+  import { selectedNFTs } from "../stores/CreationStore.js";
 
   export let collectionName;
   export let nftId;
   export let nft;
 
   function select() {
-    if ($selected[collectionName]?.includes(nftId) === true) {
-      $selected[collectionName] = $selected[collectionName].filter(
+    if ($selectedNFTs[collectionName]?.includes(nftId) === true) {
+      $selectedNFTs[collectionName] = $selectedNFTs[collectionName].filter(
         (id) => id !== nftId
       );
     } else {
-      $selected[collectionName] = [...($selected[collectionName] || []), nftId];
+      $selectedNFTs[collectionName] = [
+        ...($selectedNFTs[collectionName] || []),
+        nftId,
+      ];
     }
   }
 </script>
 
 <div
-  class:selected={$selected[collectionName]?.includes(nftId)}
+  class:selected={$selectedNFTs[collectionName]?.includes(nftId)}
   on:click={select}>
   <img
     src={`https://ipfs.infura.io/ipfs/${nft.thumbnail.cid}`}

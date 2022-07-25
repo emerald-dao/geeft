@@ -15,9 +15,11 @@
   <article>
     <h2>My Geefts</h2>
     {#await readGeefts($user.addr) then geefts}
-      {#each geefts as geeft}
-        <Geeft {geeft} />
-      {/each}
+      <div class="list">
+        {#each geefts as geeft}
+          <Geeft {geeft} />
+        {/each}
+      </div>
     {/await}
   </article>
 </div>
@@ -39,6 +41,12 @@
           {collectionName}: {$showGeeft.nfts[collectionName]}
         </div>
       {/each}
+      <p><b>Contained Tokens:</b></p>
+      {#each $showGeeft.tokens as vaultName}
+        <div class="tag">
+          {vaultName}
+        </div>
+      {/each}
     </div>
   </article>
 {/if}
@@ -53,6 +61,11 @@
 
   .blur {
     opacity: 0.25;
+  }
+
+  .list {
+    display: flex;
+    flex-wrap: wrap;
   }
 
   article {

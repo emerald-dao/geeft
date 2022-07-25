@@ -1,7 +1,8 @@
 import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
+import FungibleToken from "../contracts/utilities/FungibleToken.cdc"
 
-pub fun main(user: Address, nftInfos: {String: [String]}): {String: {UInt64: MetadataViews.Display?}} {
-  var nfts: {String: {UInt64: MetadataViews.Display?}} = {}
+pub fun main(user: Address, nftInfos: {String: [String]}, vaultInfos: {String: String}): Discovery {
+  var collections: {String: {UInt64: MetadataViews.Display?}} = {}
   let acct = getAuthAccount(user)
 
   for nft in nftInfos.keys {
@@ -18,8 +19,26 @@ pub fun main(user: Address, nftInfos: {String: [String]}): {String: {UInt64: Met
       }
     }
 
-    nfts[nft] = structs
+    collections[nft] = structs
   }
 
-  return nfts
+  var vaults: {String: UFix64} = {}
+
+  for token in vaultInfos.keys {
+    let publicPath: PublicPath = PublicPath(identifier: vaultInfos[token]!)!
+    let vault = acct.getCapability(publicPath).borrow<&{FungibleToken.Balance}>()!
+    vaults[token] = vault.balance
+  }
+
+  return Discovery(_collections: collections, _vaults: vaults)
+}
+
+pub struct Discovery {
+  pub let collections: {String: {UInt64: MetadataViews.Display?}}
+  pub let vaults: {String: UFix64}
+
+  init(_collections: {String: {UInt64: MetadataViews.Display?}}, _vaults: {String: UFix64}) {
+    self.collections = _collections
+    self.vaults = _vaults
+  }
 }

@@ -18,7 +18,7 @@ import readGeeftInfoScript from "./scripts/geeft_info.cdc?raw";
 import setupTx from "./transactions/setup.cdc?raw";
 import createGeeftTx from "./transactions/create_geeft.cdc?raw";
 import openGeeftTx from "./transactions/open_geeft.cdc?raw";
-import { message, recipient, selected } from '$lib/stores/CreationStore';
+import { message, recipient, selectedNFTs, selectedVaults } from '$lib/stores/CreationStore';
 
 if (browser) {
   // set Svelte $user store to currentUser,
@@ -65,6 +65,8 @@ function initTransactionState() {
 
 export function replaceWithProperValues(script, contractName = '', contractAddress = '') {
   const addressList = get(addresses);
+  console.log(addressList)
+  console.log(script.replace('contracts', addressList.FungibleToken));
   return script
     .replace('"../contracts/Geeft.cdc"', addressList.Geeft)
     .replace('"../contracts/utilities/MetadataViews.cdc"', addressList.MetadataViews)
@@ -105,24 +107,34 @@ export const setup = async () => {
 
 export const createGeeft = async () => {
   console.log("Hello")
-  console.log(get(selected))
 
   initTransactionState();
 
-  const selectedStore = get(selected);
-  let firstArg = [];
-  let secondArg = [];
-  for (const collectionName in selectedStore) {
-    firstArg.push({ key: collectionName, value: selectedStore[collectionName] })
-    secondArg.push({ key: collectionName, value: contractData.NFT[collectionName].storagePath })
+  let storagePaths = [];
+
+  const selectedNFTsStore = get(selectedNFTs);
+  let collectionIds = [];
+  for (const collectionName in selectedNFTsStore) {
+    collectionIds.push({ key: collectionName, value: selectedNFTsStore[collectionName] });
+    storagePaths.push({ key: collectionName, value: contractData.NFT[collectionName].storagePath });
   }
+
+  const selectedVaultsStore = get(selectedVaults);
+  let vaultAmounts = [];
+  for (const vaultName in selectedVaultsStore) {
+    vaultAmounts.push({ key: vaultName, value: parseFloat(selectedVaultsStore[vaultName]).toFixed(2) });
+    storagePaths.push({ key: vaultName, value: contractData.Token[vaultName].storagePath });
+  }
+  console.log(vaultAmounts)
+
 
   try {
     const transactionId = await fcl.mutate({
       cadence: replaceWithProperValues(createGeeftTx),
       args: (arg, t) => [
-        arg(firstArg, t.Dictionary({ key: t.String, value: t.Array(t.UInt64) })),
-        arg(secondArg, t.Dictionary({ key: t.String, value: t.String })),
+        arg(storagePaths, t.Dictionary({ key: t.String, value: t.String })),
+        arg(collectionIds, t.Dictionary({ key: t.String, value: t.Array(t.UInt64) })),
+        arg(vaultAmounts, t.Dictionary({ key: t.String, value: t.UFix64 })),
         arg(get(message), t.Optional(t.String)),
         arg([], t.Dictionary({ key: t.String, value: t.String })),
         arg(get(recipient), t.Address)
@@ -220,21 +232,27 @@ export const openGeeft = async (geeft) => {
 
 export const discover = async (address) => {
   if (!address) return {};
-  const nfts = Object.keys(contractData.NFT);
-  const nftInfos = [];
-  for (var i = 0; i < nfts.length; i++) {
-    const nftName = nfts[i];
-    const nftInfo = contractData.NFT[nftName];
-    nftInfos.push({ key: nftName, value: [nftInfo.publicPath, nftInfo.storagePath] });
+  const collections = contractData.NFT;
+  const collectionInfos = [];
+  for (const collectionName in collections) {
+    const collectionInfo = collections[collectionName];
+    collectionInfos.push({ key: collectionName, value: [collectionInfo.publicPath, collectionInfo.storagePath] });
   }
-  console.log(nftInfos)
+
+  const vaults = contractData.Token;
+  const vaultInfos = [];
+  for (const vaultName in vaults) {
+    const vaultInfo = vaults[vaultName];
+    vaultInfos.push({ key: vaultName, value: vaultInfo.balancePath });
+  }
 
   try {
     const response = await fcl.query({
       cadence: replaceWithProperValues(discoverScript),
       args: (arg, t) => [
         arg(address, t.Address),
-        arg(nftInfos, t.Dictionary({ key: t.String, value: t.Array(t.String) }))
+        arg(collectionInfos, t.Dictionary({ key: t.String, value: t.Array(t.String) })),
+        arg(vaultInfos, t.Dictionary({ key: t.String, value: t.String }))
       ],
     });
 

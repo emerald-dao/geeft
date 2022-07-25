@@ -41,6 +41,17 @@ export const contractData = {
       }
     },
   },
+  Token: {
+    FlowToken: {
+      balancePath: "flowTokenBalance",
+      storagePath: "flowTokenVault",
+      networks: {
+        emulator: "0x0ae53cb6e3f42a79",
+        testnet: "0x7e60df042a9c0868",
+        mainnet: "0x1654653399040a61"
+      }
+    },
+  },
   utility: {
     Geeft: {
       networks: {

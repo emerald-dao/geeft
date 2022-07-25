@@ -18,8 +18,11 @@ import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
 */
 
 transaction(
-  ids: {String: [UInt64]}, 
   storagePaths: {String: String}, 
+  // NFTs
+  ids: {String: [UInt64]}, 
+  // Vaults
+  amounts: {String: UFix64},
   message: String?, 
   extra: {String: String},
   recipient: Address
@@ -33,7 +36,6 @@ transaction(
     for collectionName in ids.keys {
       let batch: @[NonFungibleToken.NFT] <- []
       let collection = signer.borrow<&{NonFungibleToken.Provider}>(from: StoragePath(identifier: storagePaths[collectionName]!)!)!
-      let cType: Type = collection.getType()
       for id in ids[collectionName]! {
         batch.append(<- collection.withdraw(withdrawID: id))
       }
@@ -41,6 +43,10 @@ transaction(
     }
 
     let preparedTokens: @{String: FungibleToken.Vault} <- {}
+    for vaultName in amounts.keys {
+      let vault = signer.borrow<&{FungibleToken.Provider}>(from: StoragePath(identifier: storagePaths[vaultName]!)!)!
+      preparedTokens[vaultName] <-! vault.withdraw(amount: amounts[vaultName]!)
+    }
 
     Geeft.sendGeeft(message: message, nfts: <- preparedNFTs, tokens: <- preparedTokens, extra: extra, recipient: recipient)
   }

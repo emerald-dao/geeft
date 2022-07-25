@@ -1,11 +1,13 @@
 <script>
-  import { selected } from "../stores/CreationStore.js";
+  import { selectedNFTs, selectedVaults } from "../stores/CreationStore.js";
   import NFTCard from "./NFTCard.svelte";
+  import VaultCard from "./VaultCard.svelte";
 
   export let collections;
+  export let tokens;
 
-  $: if ($selected) {
-    console.log($selected);
+  $: if ($selectedNFTs) {
+    console.log($selectedNFTs);
   }
 
   let show = false;
@@ -17,13 +19,17 @@
 </div>
 {#if show}
   <article>
-    {#each Object.keys($selected) as collectionName}
-      {#each $selected[collectionName] as nftId}
+    {#each Object.keys($selectedNFTs) as collectionName}
+      {#each $selectedNFTs[collectionName] as nftId}
         <NFTCard
           nft={collections[collectionName][nftId]}
           {collectionName}
           {nftId} />
       {/each}
+    {/each}
+
+    {#each Object.keys($selectedVaults) as vaultName}
+      <VaultCard {vaultName} balance={tokens[vaultName]} />
     {/each}
   </article>
 {/if}

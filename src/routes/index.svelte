@@ -20,7 +20,7 @@
 
 <div class="main">
 	{#if !$user.loggedIn}
-		<article>Please connect your wallet.</article>
+		<article class="please">Please connect your wallet.</article>
 	{:else}
 		{#await discovered then discovered}
 			<div class="select">
@@ -40,6 +40,10 @@
 </div>
 
 <style>
+	.please {
+		position: relative;
+		min-height: 60vh;
+	}
 	article {
 		display: flex;
 		justify-content: center;

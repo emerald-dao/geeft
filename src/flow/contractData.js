@@ -69,6 +69,26 @@ export const contractData = {
         testnet: "",
         mainnet: "0x921ea449dffec68a"
       }
+    },
+    Driverz: {
+      storagePath: "DriverzNFTCollection",
+      publicPath: "DriverzNFTCollection",
+      collectionPublic: "CollectionPublic",
+      networks: {
+        emulator: "",
+        testnet: "",
+        mainnet: "0xa039bd7d55a96c0c"
+      }
+    },
+    Bl0x: {
+      storagePath: "bl0xNFTs",
+      publicPath: "bl0xNFTs",
+      collectionPublic: "",
+      networks: {
+        emulator: "",
+        testnet: "",
+        mainnet: "0x7620acf6d7f2468a"
+      }
     }
   },
   Token: {

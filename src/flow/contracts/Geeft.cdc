@@ -145,6 +145,14 @@ pub contract Geeft: NonFungibleToken {
       return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
     } 
 
+    pub fun borrowGeeft(id: UInt64): &NFT? {
+      if self.ownedNFTs[id] != nil {
+        let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
+        return ref as! &NFT
+      }
+      return nil
+    }
+
     pub fun getGeeftInfo(geeftId: UInt64): GeeftInfo {
       let nft = (&self.ownedNFTs[geeftId] as auth &NonFungibleToken.NFT?)!
       let geeft = nft as! &NFT

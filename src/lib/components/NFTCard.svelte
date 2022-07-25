@@ -23,7 +23,11 @@
   class:selected={$selectedNFTs[collectionName]?.includes(nftId)}
   on:click={select}>
   <img
-    src={`https://ipfs.infura.io/ipfs/${nft.thumbnail.cid}`}
+    src={"url" in nft.thumbnail
+      ? nft.thumbnail.url
+      : "path" in nft.thumbnail
+      ? `https://ipfs.infura.io/ipfs/${nft.thumbnail.cid}/${nft.thumbnail.path}`
+      : `https://ipfs.infura.io/ipfs/${nft.thumbnail.cid}`}
     alt="{nft.name} image" />
   <h3>{nft.name}</h3>
   <p>{nft.description.substring(0, 90)}...</p>

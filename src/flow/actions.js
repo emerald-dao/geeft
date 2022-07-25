@@ -4,7 +4,7 @@ import { get } from 'svelte/store';
 import * as fcl from '@onflow/fcl';
 import './config';
 
-import { user, transactionStatus, transactionInProgress, addresses, network, txId } from './stores';
+import { user, transactionStatus, transactionInProgress, addresses, network, txId, openGiftStatus } from './stores';
 import { contractData } from './contractData';
 
 ///////////////
@@ -14,6 +14,7 @@ import { contractData } from './contractData';
 import discoverScript from "./scripts/discover.cdc?raw";
 import readGeeftsScript from "./scripts/read_geefts.cdc?raw";
 import readGeeftInfoScript from "./scripts/geeft_info.cdc?raw";
+import readGeeftContentsScript from "./scripts/geeft_contents.cdc?raw";
 // Transactions
 import setupTx from "./transactions/setup.cdc?raw";
 import createGeeftTx from "./transactions/create_geeft.cdc?raw";
@@ -65,8 +66,6 @@ function initTransactionState() {
 
 export function replaceWithProperValues(script, contractName = '', contractAddress = '') {
   const addressList = get(addresses);
-  console.log(addressList)
-  console.log(script.replace('contracts', addressList.FungibleToken));
   return script
     .replace('"../contracts/Geeft.cdc"', addressList.Geeft)
     .replace('"../contracts/utilities/MetadataViews.cdc"', addressList.MetadataViews)
@@ -234,12 +233,18 @@ export const openGeeft = async (geeft) => {
       transactionStatus.set(res.status);
       console.log(res);
       if (res.status === 4) {
+        if (res.statusCode === 0) {
+          openGiftStatus.set({ success: true });
+        } else {
+          openGiftStatus.set({ success: false });
+        }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
     });
   } catch (e) {
     console.log(e);
     transactionStatus.set(99);
+    openGiftStatus.set({ success: false });
   }
 }
 
@@ -289,20 +294,19 @@ export const readGeefts = async (address) => {
       ],
     });
 
-    console.log(response);
     return response;
   } catch (e) {
     console.log(e);
   }
 };
 
-export const readGeeftInfo = async () => {
+export const readGeeftInfo = async (address, geeftId) => {
   try {
     const response = await fcl.query({
       cadence: replaceWithProperValues(readGeeftInfoScript),
       args: (arg, t) => [
-        arg("0xf8d6e0586b0a20c7", t.Address),
-        arg('35', t.UInt64)
+        arg(address, t.Address),
+        arg(geeftId, t.UInt64)
       ],
     });
 
@@ -313,64 +317,45 @@ export const readGeeftInfo = async () => {
   }
 };
 
-// Function to upload metadata to the contract in batches of 500
-export async function uploadMetadataToContract(contractName, metadatas, batchSize) {
-  const userAddr = get(user).addr;
-  // Get The MetadataId we should start at
-  let names = [];
-  let descriptions = [];
-  let thumbnails = [];
-  let extras = [];
-  for (var i = 0; i < metadatas.length; i++) {
-    const { name, description, image, ...rest } = metadatas[i];
-    names.push(name);
-    descriptions.push(description);
-    thumbnails.push(image);
-    let extra = [];
-    for (const attribute in rest) {
-      extra.push({ key: attribute, value: rest[attribute] });
-    }
-    extras.push(extra);
-  }
-
-  console.log('Uploading ' + batchSize + ' NFTs to the contract.')
-
-  const transaction = replaceWithProperValues(createMetadatasTx, contractName, userAddr)
-    .replaceAll('500', batchSize);
-
-  initTransactionState();
-
+export const readGeeftContents = async (address, geeftId) => {
   try {
-    const transactionId = await fcl.mutate({
-      cadence: transaction,
-      args: (arg, t) => [
-        arg(names, t.Array(t.String)),
-        arg(descriptions, t.Array(t.String)),
-        arg(thumbnails, t.Array(t.String)),
-        arg(extras, t.Array(t.Dictionary({ key: t.String, value: t.String })))
-      ],
-      payer: fcl.authz,
-      proposer: fcl.authz,
-      authorizations: [fcl.authz],
-      limit: 9999,
-    });
+    console.log("Hey")
+    const { nfts } = await readGeeftInfo(address, geeftId);
 
-    fcl.tx(transactionId).subscribe((res) => {
-      transactionStatus.set(res.status);
-      console.log(res);
-      if (res.status === 4) {
-        setTimeout(() => transactionInProgress.set(false), 2000);
+    let collectionAdditions = '';
+    let collectionImports = '';
+    for (const collectionName in nfts) {
+      const { networks } = contractData.NFT[collectionName];
+      collectionAdditions += `
+      answerNFTs["${collectionName}"] = []
+      let ${collectionName}NFTs: @[NonFungibleToken.NFT] <- nfts.remove(key: "${collectionName}")!
+
+      while ${collectionName}NFTs.length > 0 {
+        let nft <- ${collectionName}NFTs.removeFirst()
+        let specificNFT <- nft as! @${collectionName}.NFT
+        let resolver = &specificNFT as &{MetadataViews.Resolver}
+        answerNFTs["${collectionName}"]!.append(MetadataViews.getDisplay(resolver))
+        destroy specificNFT
       }
+      destroy ${collectionName}NFTs\n
+      `;
+      collectionImports += `import ${collectionName} from ${networks[get(network)]}\n`
+    }
+
+    console.log(replaceWithProperValues(readGeeftContentsScript).replace('// INSERT COLLECTIONS HERE', collectionAdditions).replace('// INSERT IMPORTS HERE', collectionImports))
+
+    const response = await fcl.query({
+      cadence: replaceWithProperValues(readGeeftContentsScript).replace('// INSERT COLLECTIONS HERE', collectionAdditions).replace('// INSERT IMPORTS HERE', collectionImports),
+      args: (arg, t) => [
+        arg(address, t.Address),
+        arg(geeftId, t.UInt64)
+      ],
     });
 
-    const { status, statusCode, errorMessage } = await fcl.tx(transactionId).onceSealed();
-    if (status === 4 && statusCode === 0) {
-      return { success: true };
-    }
-    return { success: false, error: errorMessage };
+    console.log(response);
+    return response;
+
   } catch (e) {
     console.log(e);
-    transactionStatus.set(99);
-    return { success: false, error: e }
   }
 }

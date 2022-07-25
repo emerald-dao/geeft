@@ -3,7 +3,7 @@
 
   export let vaultName;
   export let balance;
-  console.log(balance);
+  export let input = true;
 
   $: if ($selectedVaults[vaultName] === null) {
     delete $selectedVaults[vaultName];
@@ -15,13 +15,15 @@
   <img src={`/images/vaults/${vaultName}.png`} alt="{vaultName} image" />
   <h3>{vaultName}</h3>
   <p>Balance: <i>{parseFloat(balance)}</i></p>
-  <label for="amount"
-    >amount<input
-      name="amount"
-      id="amount"
-      type="text"
-      bind:value={$selectedVaults[vaultName]}
-      placeholder="10.0" /></label>
+  {#if input}
+    <label for="amount"
+      >amount<input
+        name="amount"
+        id="amount"
+        type="text"
+        bind:value={$selectedVaults[vaultName]}
+        placeholder="10.0" /></label>
+  {/if}
 </div>
 
 <style>

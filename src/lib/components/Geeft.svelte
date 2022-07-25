@@ -1,8 +1,6 @@
 <script>
   import { showGeeft } from "$lib/stores/MyGeefts.js";
   export let geeft;
-
-  console.log(geeft);
 </script>
 
 <div on:click={() => ($showGeeft = geeft)}>

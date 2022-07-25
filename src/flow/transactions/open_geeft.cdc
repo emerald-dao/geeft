@@ -1,6 +1,7 @@
 import NonFungibleToken from "../contracts/utilities/NonFungibleToken.cdc"
 import Geeft from "../contracts/Geeft.cdc"
 import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
+import FungibleToken from "../contracts/utilities/FungibleToken.cdc"
 
 // INSERT IMPORTS HERE
 
@@ -10,9 +11,9 @@ transaction(id: UInt64) {
                             ?? panic("The signer does not have a Geeft Collection set up.")
     
     let geeft: @Geeft.NFT <- GeeftCollection.withdraw(withdrawID: id) as! @Geeft.NFT
-    let nfts <- geeft.openNFTs()
 
     /*** Collections ***/
+    let nfts <- geeft.openNFTs()
 
     // INSERT COLLECTIONS HERE
 
@@ -20,8 +21,9 @@ transaction(id: UInt64) {
     destroy nfts
 
     /*** Vaults ***/
-    
     let tokens <- geeft.openTokens()
+
+    // INSERT VAULTS HERE
 
     assert(tokens.length == 0, message: "There are still tokens left in the Geeft.")
     destroy tokens

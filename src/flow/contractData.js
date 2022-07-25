@@ -45,6 +45,7 @@ export const contractData = {
     FlowToken: {
       balancePath: "flowTokenBalance",
       storagePath: "flowTokenVault",
+      receiverPath: "flowTokenReceiver",
       networks: {
         emulator: "0x0ae53cb6e3f42a79",
         testnet: "0x7e60df042a9c0868",

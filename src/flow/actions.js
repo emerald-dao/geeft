@@ -164,24 +164,19 @@ export const openGeeft = async (geeft) => {
 
   initTransactionState();
 
-  // TODO
-  // Get list of NFTs here from script
-  const collections = Object.keys(geeft.nfts);
+  console.log(geeft);
 
   // TODO
   // Get imports from the collections that are in it
   let imports = '';
-  let additions = '';
+  let collectionAdditions = '';
 
-  // Collection 1
-  for (var i = 0; i < collections.length; i++) {
-    const collectionName = collections[i];
+  for (const collectionName in geeft.nfts) {
     const collectionInfo = contractData.NFT[collectionName];
-    console.log(collectionInfo)
     const { storagePath, publicPath, collectionPublic, networks } = collectionInfo;
-    additions += `
+    collectionAdditions += `
     if signer.borrow<&${collectionName}.Collection>(from: /storage/${storagePath}) == nil {
-      signer.save(<- Geeft.createEmptyCollection(), to: /storage/${storagePath})
+      signer.save(<- ${collectionName}.createEmptyCollection(), to: /storage/${storagePath})
     }
     if signer.getCapability<&${collectionName}.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection, ${collectionName}.${collectionPublic}}>(/public/${publicPath}).borrow() == nil {
         signer.unlink(/public/${publicPath})
@@ -192,18 +187,38 @@ export const openGeeft = async (geeft) => {
     while ${collectionName}CollectionNFTs.length > 0 {
       ${collectionName}Collection.deposit(token: <- ${collectionName}CollectionNFTs.removeFirst())
     }
-    log(${collectionName}CollectionNFTs.length)
-    // assert(${collectionName}CollectionNFTs.length == 0, message: "Did not empty out ${collectionName}")
+    assert(${collectionName}CollectionNFTs.length == 0, message: "Did not empty out ${collectionName}")
     destroy ${collectionName}CollectionNFTs\n
     `;
     imports += `import ${collectionName} from ${networks[get(network)]}\n`
   }
 
-  console.log(replaceWithProperValues(openGeeftTx).replace("// INSERT COLLECTIONS HERE", additions).replace("// INSERT IMPORTS HERE", imports))
+  let vaultAdditions = '';
+  geeft.tokens.forEach(vaultName => {
+    const vaultInfo = contractData.Token[vaultName];
+    const { storagePath, balancePath, receiverPath, networks } = vaultInfo;
+    vaultAdditions += `
+    if signer.borrow<&${vaultName}.Vault>(from: /storage/${storagePath}) == nil {
+      signer.save(<- ${vaultName}.createEmptyVault(), to: /storage/${storagePath})
+    }
+    if signer.getCapability<&${vaultName}.Vault{FungibleToken.Receiver}>(/public/${receiverPath}).borrow() == nil {
+        signer.unlink(/public/${receiverPath})
+        signer.link<&${vaultName}.Vault{FungibleToken.Receiver}>(/public/${receiverPath}, target: /storage/${storagePath})
+    }
+    if signer.getCapability<&${vaultName}.Vault{FungibleToken.Balance}>(/public/${balancePath}).borrow() == nil {
+      signer.unlink(/public/${balancePath})
+      signer.link<&${vaultName}.Vault{FungibleToken.Balance}>(/public/${balancePath}, target: /storage/${storagePath})
+    }
+    let ${vaultName}Vault = signer.borrow<&${vaultName}.Vault>(from: /storage/${storagePath})!
+    let ${vaultName}Tokens: @FungibleToken.Vault <- tokens.remove(key: "${vaultName}") ?? panic("${vaultName} does not exist in here.")
+    ${vaultName}Vault.deposit(from: <- ${vaultName}Tokens)\n
+    `;
+    imports += `import ${vaultName} from ${networks[get(network)]}\n`
+  });
 
   try {
     const transactionId = await fcl.mutate({
-      cadence: replaceWithProperValues(openGeeftTx).replace("// INSERT COLLECTIONS HERE", additions).replace("// INSERT IMPORTS HERE", imports),
+      cadence: replaceWithProperValues(openGeeftTx).replace("// INSERT COLLECTIONS HERE", collectionAdditions).replace("// INSERT VAULTS HERE", vaultAdditions).replace("// INSERT IMPORTS HERE", imports),
       args: (arg, t) => [
         arg(geeft.id, t.UInt64)
       ],

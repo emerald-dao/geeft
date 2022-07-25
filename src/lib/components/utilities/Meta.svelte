@@ -1,6 +1,4 @@
 <script>
-  export let title;
-  export let url;
 </script>
 
 <svelte:head>

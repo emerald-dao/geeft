@@ -2,7 +2,7 @@ import { writable, get, derived } from 'svelte/store';
 import { contractData } from './contractData';
 
 export const user = writable({ loggedIn: false });
-export const network = writable('mainnet');
+export const network = writable('emulator');
 export const transactionStatus = writable(null);
 export const transactionInProgress = writable(false);
 export const txId = writable(null);

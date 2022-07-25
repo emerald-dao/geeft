@@ -61,7 +61,9 @@
     .flex-container {
       flex-direction: row;
     }
+  }
 
+  @media all and (max-width: 1000px) {
     a,
     p {
       font-size: 12px;

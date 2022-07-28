@@ -171,6 +171,7 @@ export const openGeeft = async (geeft) => {
   // Get imports from the collections that are in it
   let imports = '';
   let collectionAdditions = '';
+  const currentNetwork = get(network);
 
   for (const collectionName in geeft.nfts) {
     const collectionInfo = contractData.NFT[collectionName];
@@ -191,7 +192,7 @@ export const openGeeft = async (geeft) => {
     assert(${collectionName}CollectionNFTs.length == 0, message: "Did not empty out ${collectionName}")
     destroy ${collectionName}CollectionNFTs\n
     `;
-    imports += `import ${collectionName} from ${networks[get(network)]}\n`
+    imports += `import ${collectionName} from ${networks[currentNetwork]}\n`
   }
 
   let vaultAdditions = '';

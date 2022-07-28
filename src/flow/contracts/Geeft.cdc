@@ -6,12 +6,17 @@ pub contract Geeft: NonFungibleToken {
 
   pub var totalSupply: UInt64
 
+  // Paths
   pub let CollectionPublicPath: PublicPath
   pub let CollectionStoragePath: StoragePath
 
+  // Standard Events
   pub event ContractInitialized()
   pub event Withdraw(id: UInt64, from: Address?)
   pub event Deposit(id: UInt64, to: Address?)
+
+  // Geeft Events
+  pub event GeeftCreated(id: UInt64, message: String?, from: Address, to: Address)
 
   pub struct GeeftInfo {
     pub let id: UInt64
@@ -32,6 +37,7 @@ pub contract Geeft: NonFungibleToken {
   // This represents a Geeft
   pub resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver {
     pub let id: UInt64
+    pub let from: Address
     pub let message: String?
     // Maps NFT collection type (ex. String<@FLOAT.Collection>()) -> array of NFTs
     pub var storedNFTs: @{String: [NonFungibleToken.NFT]}
@@ -72,18 +78,19 @@ pub contract Geeft: NonFungibleToken {
       switch view {
         case Type<MetadataViews.Display>():
           return MetadataViews.Display(
-            name: "Geeft",
-            description: "This is a Geeft.",
+            name: "Geeft #".concat(self.id.toString()),
+            description: self.message ?? "This is a Geeft from ".concat(self.from.toString()).concat("."),
             thumbnail: MetadataViews.HTTPFile(
-              url: ""
+              url: "https://i.imgur.com/dZxbOEa.png"
             )
           )
       }
       return nil
     }
 
-    init(message: String?, nfts: @{String: [NonFungibleToken.NFT]}, tokens: @{String: FungibleToken.Vault}, extra: {String: AnyStruct}) {
+    init(from: Address, message: String?, nfts: @{String: [NonFungibleToken.NFT]}, tokens: @{String: FungibleToken.Vault}, extra: {String: AnyStruct}) {
       self.id = self.uuid
+      self.from = from
       self.message = message
       self.storedNFTs <- nfts
       self.storedTokens <- tokens
@@ -102,16 +109,19 @@ pub contract Geeft: NonFungibleToken {
   }
 
   pub fun sendGeeft(
+    from: Address,
     message: String?, 
     nfts: @{String: [NonFungibleToken.NFT]}, 
     tokens: @{String: FungibleToken.Vault}, 
     extra: {String: AnyStruct}, 
     recipient: Address
   ) {
-    let geeft <- create NFT(message: message, nfts: <- nfts, tokens: <- tokens, extra: extra)
+    let geeft <- create NFT(from: from, message: message, nfts: <- nfts, tokens: <- tokens, extra: extra)
     let collection = getAccount(recipient).getCapability(Geeft.CollectionPublicPath)
                         .borrow<&Collection{NonFungibleToken.Receiver}>()
                         ?? panic("The recipient does not have a Geeft Collection")
+
+    emit GeeftCreated(id: geeft.id, message: message, from: from, to: recipient)
     collection.deposit(token: <- geeft)
   }
 

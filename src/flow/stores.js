@@ -22,4 +22,4 @@ export const addresses = derived(
 	}
 )
 
-export const openGiftStatus = writable({ success: false });
+export const openGiftStatus = writable({ success: false, inProgress: false });

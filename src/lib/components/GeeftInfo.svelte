@@ -9,7 +9,12 @@
   let unwrapped = readGeeftContents($user.addr, $showGeeft.id);
 </script>
 
-{#if !$openGiftStatus.success}
+{#if $openGiftStatus.inProgress}
+  <article class="geeft">
+    <img class="shake" src="/gift.png" alt="geeft logo" />
+    <p>Opening...</p>
+  </article>
+{:else if !$openGiftStatus.success}
   <article class="geeft">
     <div class="img-container">
       <img src="/gift.png" alt="geeft logo" />
@@ -62,6 +67,22 @@
 {/if}
 
 <style>
+  .shake {
+    animation: shake 0.5s linear infinite;
+  }
+  @keyframes shake {
+    0% {
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
+    100% {
+      transform: translateX(0px);
+    }
+  }
   article {
     box-shadow: #0000003d 0 3px 8px;
     border-radius: 5px;

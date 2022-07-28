@@ -211,6 +211,8 @@ export const openGeeft = async (geeft) => {
     imports += `import ${vaultName} from ${networks[get(network)]}\n`
   });
 
+  openGiftStatus.set({ success: false, inProgress: true });
+
   try {
     const transactionId = await fcl.mutate({
       cadence: replaceWithProperValues(openGeeftTx).replace("// INSERT COLLECTIONS HERE", collectionAdditions).replace("// INSERT VAULTS HERE", vaultAdditions).replace("// INSERT IMPORTS HERE", imports),
@@ -230,9 +232,9 @@ export const openGeeft = async (geeft) => {
       console.log(res);
       if (res.status === 4) {
         if (res.statusCode === 0) {
-          openGiftStatus.set({ success: true });
+          openGiftStatus.set({ success: true, inProgress: false });
         } else {
-          openGiftStatus.set({ success: false });
+          openGiftStatus.set({ success: false, inProgress: false });
         }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
@@ -240,7 +242,7 @@ export const openGeeft = async (geeft) => {
   } catch (e) {
     console.log(e);
     transactionStatus.set(99);
-    openGiftStatus.set({ success: false });
+    openGiftStatus.set({ success: false, inProgress: false });
   }
 }
 

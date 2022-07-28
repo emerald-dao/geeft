@@ -16,17 +16,19 @@ pub contract Geeft: NonFungibleToken {
   pub event Deposit(id: UInt64, to: Address?)
 
   // Geeft Events
-  pub event GeeftCreated(id: UInt64, message: String?, from: Address, to: Address)
+  pub event GeeftCreated(id: UInt64, message: String?, from: Address?, to: Address)
 
   pub struct GeeftInfo {
     pub let id: UInt64
+    pub let from: Address?
     pub let message: String?
     pub let nfts: {String: Int}
     pub let tokens: [String]
     pub let extra: {String: AnyStruct}
 
-    init(id: UInt64, message: String?, nfts: {String: Int}, tokens: [String], extra: {String: AnyStruct}) {
+    init(id: UInt64, from: Address?, message: String?, nfts: {String: Int}, tokens: [String], extra: {String: AnyStruct}) {
       self.id = id
+      self.from = from
       self.message = message
       self.nfts = nfts
       self.tokens = tokens
@@ -37,7 +39,7 @@ pub contract Geeft: NonFungibleToken {
   // This represents a Geeft
   pub resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver {
     pub let id: UInt64
-    pub let from: Address
+    pub let from: Address?
     pub let message: String?
     // Maps NFT collection type (ex. String<@FLOAT.Collection>()) -> array of NFTs
     pub var storedNFTs: @{String: [NonFungibleToken.NFT]}
@@ -53,7 +55,7 @@ pub contract Geeft: NonFungibleToken {
 
       let tokens: [String] = self.storedTokens.keys
 
-      return GeeftInfo(id: self.id, message: self.message, nfts: nfts, tokens: tokens, extra: self.extra)
+      return GeeftInfo(id: self.id, from: self.from, message: self.message, nfts: nfts, tokens: tokens, extra: self.extra)
     }
 
     pub fun openNFTs(): @{String: [NonFungibleToken.NFT]} {
@@ -79,7 +81,7 @@ pub contract Geeft: NonFungibleToken {
         case Type<MetadataViews.Display>():
           return MetadataViews.Display(
             name: "Geeft #".concat(self.id.toString()),
-            description: self.message ?? "This is a Geeft from ".concat(self.from.toString()).concat("."),
+            description: self.message ?? (self.from == nil ? "This is a Geeft." : "This is a Geeft from ".concat(self.from!.toString()).concat(".")),
             thumbnail: MetadataViews.HTTPFile(
               url: "https://i.imgur.com/dZxbOEa.png"
             )
@@ -88,7 +90,7 @@ pub contract Geeft: NonFungibleToken {
       return nil
     }
 
-    init(from: Address, message: String?, nfts: @{String: [NonFungibleToken.NFT]}, tokens: @{String: FungibleToken.Vault}, extra: {String: AnyStruct}) {
+    init(from: Address?, message: String?, nfts: @{String: [NonFungibleToken.NFT]}, tokens: @{String: FungibleToken.Vault}, extra: {String: AnyStruct}) {
       self.id = self.uuid
       self.from = from
       self.message = message
@@ -109,7 +111,7 @@ pub contract Geeft: NonFungibleToken {
   }
 
   pub fun sendGeeft(
-    from: Address,
+    from: Address?,
     message: String?, 
     nfts: @{String: [NonFungibleToken.NFT]}, 
     tokens: @{String: FungibleToken.Vault}, 

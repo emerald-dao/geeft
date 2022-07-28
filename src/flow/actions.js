@@ -66,7 +66,6 @@ function initTransactionState() {
 
 export function replaceWithProperValues(script, contractName = '', contractAddress = '') {
   const addressList = get(addresses);
-  console.log(addressList)
   return script
     .replace('"../contracts/Geeft.cdc"', addressList.Geeft)
     .replace('"../contracts/utilities/MetadataViews.cdc"', addressList.MetadataViews)
@@ -107,8 +106,6 @@ export const setup = async () => {
 }
 
 export const createGeeft = async () => {
-  console.log("Hello")
-
   initTransactionState();
 
   let storagePaths = [];
@@ -126,8 +123,6 @@ export const createGeeft = async () => {
     vaultAmounts.push({ key: vaultName, value: parseFloat(selectedVaultsStore[vaultName]).toFixed(2) });
     storagePaths.push({ key: vaultName, value: contractData.Token[vaultName].storagePath });
   }
-  console.log(vaultAmounts)
-
 
   try {
     const transactionId = await fcl.mutate({
@@ -164,8 +159,6 @@ export const createGeeft = async () => {
 export const openGeeft = async (geeft) => {
 
   initTransactionState();
-
-  console.log(geeft);
 
   // TODO
   // Get imports from the collections that are in it
@@ -332,20 +325,20 @@ export const readGeeftContents = async (address, geeftId) => {
       collectionAdditions += `
       answerNFTs["${collectionName}"] = []
       let ${collectionName}NFTs: @[NonFungibleToken.NFT] <- nfts.remove(key: "${collectionName}")!
+      let ${collectionName}Done: @[NonFungibleToken.NFT] <- []
 
       while ${collectionName}NFTs.length > 0 {
         let nft <- ${collectionName}NFTs.removeFirst()
         let specificNFT <- nft as! @${collectionName}.NFT
         let resolver = &specificNFT as &{MetadataViews.Resolver}
         answerNFTs["${collectionName}"]!.append(MetadataViews.getDisplay(resolver))
-        destroy specificNFT
+        ${collectionName}Done.append(<- specificNFT)
       }
-      destroy ${collectionName}NFTs\n
+      destroy ${collectionName}NFTs
+      nfts["${collectionName}"] <-! ${collectionName}Done\n
       `;
       collectionImports += `import ${collectionName} from ${networks[get(network)]}\n`
     }
-
-    console.log(replaceWithProperValues(readGeeftContentsScript).replace('// INSERT COLLECTIONS HERE', collectionAdditions).replace('// INSERT IMPORTS HERE', collectionImports))
 
     const response = await fcl.query({
       cadence: replaceWithProperValues(readGeeftContentsScript).replace('// INSERT COLLECTIONS HERE', collectionAdditions).replace('// INSERT IMPORTS HERE', collectionImports),

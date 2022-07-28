@@ -16,7 +16,7 @@ pub fun main(user: Address, id: UInt64): GeeftContent {
 
   // INSERT COLLECTIONS HERE
 
-  destroy nfts
+  acct.save(<- nfts, to: /storage/SomeRandomGeeftThingWOOOOOOOOOOO)
 
   let tokens: @{String: FungibleToken.Vault} <- geeft.openTokens()
   let answerTokens: {String: UFix64} = {}

@@ -31,7 +31,9 @@
     alt="{nft.name} image" />
   <h3>{nft.name}</h3>
   <p>{nft.description.substring(0, 90)}...</p>
-  <small>#{nftId}</small>
+  {#if nftId}
+    <small>#{nftId}</small>
+  {/if}
 </div>
 
 <style>

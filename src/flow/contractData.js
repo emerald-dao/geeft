@@ -1,15 +1,15 @@
 export const contractData = {
   NFT: {
-    ExampleNFT: {
-      storagePath: "ExampleNFTCollection",
-      publicPath: "ExampleNFTCollection",
-      collectionPublic: "ExampleNFTCollectionPublic",
-      networks: {
-        emulator: "0xf8d6e0586b0a20c7",
-        testnet: "",
-        mainnet: ""
-      }
-    },
+    // ExampleNFT: {
+    //   storagePath: "ExampleNFTCollection",
+    //   publicPath: "ExampleNFTCollection",
+    //   collectionPublic: "ExampleNFTCollectionPublic",
+    //   networks: {
+    //     emulator: "0xf8d6e0586b0a20c7",
+    //     testnet: "",
+    //     mainnet: ""
+    //   }
+    // },
     Flunks: {
       storagePath: "FlunksCollection",
       publicPath: "FlunksCollection",

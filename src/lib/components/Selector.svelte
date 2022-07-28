@@ -21,15 +21,17 @@
     </button>
   </div>
   {#if $displayNFTs === true}
-    {#each collections as collection}
-      <button
-        on:click={() => ($currentCollection = collection)}
-        class:selected={$currentCollection === collection}>
-        <img
-          src="/images/collections/{collection}.png"
-          alt="{collection} logo" />
-        <p>{collection}</p>
-      </button>
+    {#each Object.keys(collections) as collection}
+      {#if Object.keys(collections[collection]).length !== 0}
+        <button
+          on:click={() => ($currentCollection = collection)}
+          class:selected={$currentCollection === collection}>
+          <img
+            src="/images/collections/{collection}.png"
+            alt="{collection} logo" />
+          <p>{collection}</p>
+        </button>
+      {/if}
     {/each}
   {:else}
     {#each tokens as token}
@@ -72,7 +74,7 @@
     border-radius: 5px;
     padding: 5px;
     color: white;
-    font-size: 20px;
+    font-size: 16px;
     margin: 5px;
     box-sizing: border-box;
   }

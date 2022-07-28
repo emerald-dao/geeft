@@ -66,12 +66,14 @@ function initTransactionState() {
 
 export function replaceWithProperValues(script, contractName = '', contractAddress = '') {
   const addressList = get(addresses);
+  console.log(addressList)
   return script
     .replace('"../contracts/Geeft.cdc"', addressList.Geeft)
     .replace('"../contracts/utilities/MetadataViews.cdc"', addressList.MetadataViews)
     .replace('"../contracts/utilities/NonFungibleToken.cdc"', addressList.NonFungibleToken)
     .replace('"../contracts/projects/ExampleNFT/ExampleNFT.cdc"', addressList.ExampleNFT)
     .replace('"../contracts/utilities/FungibleToken.cdc"', addressList.FungibleToken)
+    .replace('"../contracts/projects/FLOAT/FLOAT.cdc"', addressList.FLOAT)
 }
 
 // ****** Transactions ****** //

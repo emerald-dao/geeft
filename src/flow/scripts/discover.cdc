@@ -1,5 +1,6 @@
 import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
 import FungibleToken from "../contracts/utilities/FungibleToken.cdc"
+import FLOAT from "../contracts/projects/FLOAT/FLOAT.cdc"
 
 pub fun main(user: Address, nftInfos: {String: [String]}, vaultInfos: {String: String}): Discovery {
   var collections: {String: {UInt64: MetadataViews.Display?}} = {}
@@ -9,13 +10,27 @@ pub fun main(user: Address, nftInfos: {String: [String]}, vaultInfos: {String: S
     let publicPath = nftInfos[nft]![0]
     let storagePath = nftInfos[nft]![1]
     let tempPublicPath: PublicPath = PublicPath(identifier: "Geeft".concat(publicPath))!
-    acct.link<&{MetadataViews.ResolverCollection}>(tempPublicPath, target: StoragePath(identifier: storagePath)!)
-
     let structs: {UInt64: MetadataViews.Display?} = {}
-    if let collection = acct.getCapability(tempPublicPath).borrow<&{MetadataViews.ResolverCollection}>() {
-      for id in collection.getIDs() {
-        let viewResolver: &{MetadataViews.Resolver} = collection.borrowViewResolver(id: id)
-        structs[id] = MetadataViews.getDisplay(viewResolver)
+
+    // Have to do FLOATs separately since some (or most) are soulbound
+    if nft == "FLOAT" {
+      acct.link<&{MetadataViews.ResolverCollection, FLOAT.CollectionPublic}>(tempPublicPath, target: StoragePath(identifier: storagePath)!)
+      if let collection = acct.getCapability(tempPublicPath).borrow<&{MetadataViews.ResolverCollection, FLOAT.CollectionPublic}>() {
+        for id in collection.getIDs() {
+          if collection.borrowFLOAT(id: id)!.getEventMetadata()?.transferrable == true {
+            let viewResolver: &{MetadataViews.Resolver} = collection.borrowViewResolver(id: id)
+            structs[id] = MetadataViews.getDisplay(viewResolver)
+          }
+        }
+      }
+    } else {
+      acct.link<&{MetadataViews.ResolverCollection}>(tempPublicPath, target: StoragePath(identifier: storagePath)!)
+      // Non-FLOATs
+      if let collection = acct.getCapability(tempPublicPath).borrow<&{MetadataViews.ResolverCollection}>() {
+        for id in collection.getIDs() {
+          let viewResolver: &{MetadataViews.Resolver} = collection.borrowViewResolver(id: id)
+          structs[id] = MetadataViews.getDisplay(viewResolver)
+        }
       }
     }
 

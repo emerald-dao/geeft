@@ -6,10 +6,6 @@
   export let collections;
   export let tokens;
 
-  $: if ($selectedNFTs) {
-    console.log($selectedNFTs);
-  }
-
   let show = false;
 </script>
 

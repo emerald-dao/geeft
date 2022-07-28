@@ -4,12 +4,6 @@
   import Geeft from "$lib/components/Geeft.svelte";
   import { showGeeft } from "$lib/stores/MyGeefts.js";
   import GeeftInfo from "$lib/components/GeeftInfo.svelte";
-
-  console.log($showGeeft);
-
-  $: if ($showGeeft) {
-    console.log($showGeeft);
-  }
 </script>
 
 <div class="main" class:blur={$showGeeft !== false}>

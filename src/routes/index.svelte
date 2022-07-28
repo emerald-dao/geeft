@@ -25,7 +25,7 @@
 		{#await discovered then discovered}
 			<div class="select">
 				<Selector
-					collections={Object.keys(discovered.collections)}
+					collections={discovered.collections}
 					tokens={Object.keys(discovered.vaults)} />
 				<Display
 					collections={discovered.collections}

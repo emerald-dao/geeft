@@ -4,7 +4,7 @@ import { get } from 'svelte/store';
 import * as fcl from '@onflow/fcl';
 import './config';
 
-import { user, transactionStatus, transactionInProgress, addresses, network, txId, openGiftStatus } from './stores';
+import { user, transactionStatus, transactionInProgress, addresses, network, txId, openGiftStatus, sendGiftStatus } from './stores';
 import { contractData } from './contractData';
 
 ///////////////
@@ -124,6 +124,8 @@ export const createGeeft = async () => {
     storagePaths.push({ key: vaultName, value: contractData.Token[vaultName].storagePath });
   }
 
+  sendGiftStatus.set({ success: false, inProgress: true });
+
   try {
     const transactionId = await fcl.mutate({
       cadence: replaceWithProperValues(createGeeftTx),
@@ -147,11 +149,17 @@ export const createGeeft = async () => {
       transactionStatus.set(res.status);
       console.log(res);
       if (res.status === 4) {
+        if (res.statusCode === 0) {
+          sendGiftStatus.set({ success: true, inProgress: false });
+        } else {
+          sendGiftStatus.set({ success: false, inProgress: false, error: res.errorMessage });
+        }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
     });
   } catch (e) {
     console.log(e);
+    sendGiftStatus.set({ success: false, inProgress: false, error: e });
     transactionStatus.set(99);
   }
 }
@@ -234,7 +242,7 @@ export const openGeeft = async (geeft) => {
         if (res.statusCode === 0) {
           openGiftStatus.set({ success: true, inProgress: false });
         } else {
-          openGiftStatus.set({ success: false, inProgress: false });
+          openGiftStatus.set({ success: false, inProgress: false, error: errorMessage });
         }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
@@ -242,7 +250,7 @@ export const openGeeft = async (geeft) => {
   } catch (e) {
     console.log(e);
     transactionStatus.set(99);
-    openGiftStatus.set({ success: false, inProgress: false });
+    openGiftStatus.set({ success: false, inProgress: false, error: e });
   }
 }
 

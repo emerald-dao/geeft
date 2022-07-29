@@ -42,6 +42,7 @@
     color: white;
     font-size: 20px;
     box-shadow: #0000003d 0 3px 8px;
+    cursor: pointer;
   }
   img {
     width: 75px;

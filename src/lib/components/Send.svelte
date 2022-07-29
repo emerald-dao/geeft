@@ -1,7 +1,7 @@
 <script>
   import { createGeeft } from "../../flow/actions";
-
   import { message, recipient } from "$lib/stores/CreationStore.js";
+  import { sendGiftStatus } from "../../flow/stores";
 </script>
 
 <div>
@@ -21,7 +21,13 @@
     id="recipient"
     placeholder="0x5643fd47a29770e7"
     bind:value={$recipient} />
-  <button on:click={createGeeft}>Send</button>
+  {#if $sendGiftStatus.inProgress}
+    <button>Sending...</button>
+  {:else if !$sendGiftStatus.success}
+    <button on:click={createGeeft}>Send</button>
+  {:else}
+    <button>Sent!</button>
+  {/if}
 </article>
 
 <style>

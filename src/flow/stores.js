@@ -23,4 +23,4 @@ export const addresses = derived(
 )
 
 export const sendGiftStatus = writable({ success: false, inProgress: false, error: null });
-export const openGiftStatus = writable({ success: false, inProgress: false, error: 'gg' });
+export const openGiftStatus = writable({ success: false, inProgress: false, error: null });

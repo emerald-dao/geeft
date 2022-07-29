@@ -24,6 +24,7 @@
       </div>
     </div>
     <div class="info">
+      <p><b>From:</b> {$showGeeft.from}</p>
       <p><b>Message:</b> {$showGeeft.message}</p>
       <p><b>Contained Collections:</b></p>
       {#each Object.keys($showGeeft.nfts) as collectionName}

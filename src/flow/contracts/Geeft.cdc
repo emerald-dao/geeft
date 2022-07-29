@@ -17,22 +17,99 @@ pub contract Geeft: NonFungibleToken {
 
   // Geeft Events
   pub event GeeftCreated(id: UInt64, message: String?, from: Address?, to: Address)
+  pub event GeeftOpened(id: UInt64, by: Address)
 
   pub struct GeeftInfo {
     pub let id: UInt64
     pub let from: Address?
     pub let message: String?
-    pub let nfts: {String: Int}
-    pub let tokens: [String]
+    pub let collections: {String: [MetadataViews.Display?]}
+    pub let vaults: {String: UFix64?}
     pub let extra: {String: AnyStruct}
 
-    init(id: UInt64, from: Address?, message: String?, nfts: {String: Int}, tokens: [String], extra: {String: AnyStruct}) {
+    init(id: UInt64, from: Address?, message: String?, collections: {String: [MetadataViews.Display?]}, vaults: {String: UFix64?}, extra: {String: AnyStruct}) {
       self.id = id
       self.from = from
       self.message = message
-      self.nfts = nfts
-      self.tokens = tokens
+      self.collections = collections
+      self.vaults = vaults
       self.extra = extra
+    }
+  }
+
+  pub resource CollectionContainer {
+    pub let publicPath: PublicPath
+    pub let storagePath: StoragePath
+    pub let assets: @[{MetadataViews.Resolver}]
+    pub let cap: Capability<&{NonFungibleToken.Receiver}>
+
+    init(
+      publicPath: PublicPath,
+      storagePath: StoragePath,
+      assets: @[{MetadataViews.Resolver}],
+      to: Address
+    ) {
+      self.publicPath = publicPath
+      self.storagePath = storagePath
+      self.assets <- assets
+      self.cap = getAccount(to).getCapability<&{NonFungibleToken.Receiver}>(publicPath)
+    }
+
+    pub fun send() {
+      let collection = self.cap.borrow() ?? panic("The recipient has not setup their Collection yet.")
+      while self.assets.length > 0 {
+        collection.deposit(token: <- (self.assets.removeFirst() as! @NonFungibleToken.NFT))
+      }
+    }
+
+    pub fun getDisplays(): [MetadataViews.Display?] {
+      var i = 0
+      let answer: [MetadataViews.Display?] = []
+      while i < self.assets.length {
+        let viewResolver = &self.assets[i] as &{MetadataViews.Resolver}
+        answer.append(MetadataViews.getDisplay(viewResolver))
+        i = i + 1
+      }
+
+      return answer
+    }
+
+    destroy () {
+      destroy self.assets
+    }
+  }
+
+  pub resource VaultContainer {
+    pub let receiverPath: PublicPath
+    pub let storagePath: StoragePath
+    pub var assets: @FungibleToken.Vault?
+    pub let cap: Capability<&{FungibleToken.Receiver}>
+
+    init(
+      receiverPath: PublicPath,
+      storagePath: StoragePath,
+      assets: @FungibleToken.Vault,
+      to: Address
+    ) {
+      self.receiverPath = receiverPath
+      self.storagePath = storagePath
+      self.assets <- assets
+      self.cap = getAccount(to).getCapability<&{FungibleToken.Receiver}>(receiverPath)
+    }
+
+    pub fun send() {
+      let vault = self.cap.borrow() ?? panic("The recipient has not setup their Vault yet.")
+      var assets: @FungibleToken.Vault? <- nil
+      self.assets <-> assets
+      vault.deposit(from: <- assets!)
+    }
+
+    pub fun getBalance(): UFix64? {
+      return self.assets?.balance
+    }
+
+    destroy () {
+      destroy self.assets
     }
   }
 
@@ -41,33 +118,34 @@ pub contract Geeft: NonFungibleToken {
     pub let id: UInt64
     pub let from: Address?
     pub let message: String?
-    // Maps NFT collection type (ex. String<@FLOAT.Collection>()) -> array of NFTs
-    pub var storedNFTs: @{String: [NonFungibleToken.NFT]}
-    // Maps token type (ex. String<@FlowToken.Vault>()) -> vault
-    pub var storedTokens: @{String: FungibleToken.Vault}
+    // ex. "FLOAT" -> A bunch of FLOATs and associated information
+    pub var storedCollections: @{String: CollectionContainer}
+    // ex. "FlowToken" -> Stored $FLOW and associated information
+    pub var storedVaults: @{String: VaultContainer}
     pub let extra: {String: AnyStruct}
 
     pub fun getGeeftInfo(): GeeftInfo {
-      let nfts: {String: Int} = {}
-      for nftString in self.storedNFTs.keys {
-        nfts[nftString] = self.storedNFTs[nftString]?.length
+      let collections: {String: [MetadataViews.Display?]} = {}
+      for collectionName in self.storedCollections.keys {
+        collections[collectionName] = self.storedCollections[collectionName]?.getDisplays()
       }
 
-      let tokens: [String] = self.storedTokens.keys
+      let vaults: {String: UFix64?} = {}
+      for vaultName in self.storedVaults.keys {
+        vaults[vaultName] = self.storedVaults[vaultName]?.getBalance()
+      }
 
-      return GeeftInfo(id: self.id, from: self.from, message: self.message, nfts: nfts, tokens: tokens, extra: self.extra)
+      return GeeftInfo(id: self.id, from: self.from, message: self.message, collections: collections, vaults: vaults, extra: self.extra)
     }
 
-    pub fun openNFTs(): @{String: [NonFungibleToken.NFT]} {
-      var storedNFTs: @{String: [NonFungibleToken.NFT]} <- {}
-      self.storedNFTs <-> storedNFTs
-      return <- storedNFTs
-    }
+    pub fun open() {
+      for collectionName in self.storedCollections.keys {
+         self.storedCollections[collectionName]?.send()
+      }
 
-    pub fun openTokens(): @{String: FungibleToken.Vault} {
-      var storedTokens: @{String: FungibleToken.Vault} <- {}
-      self.storedTokens <-> storedTokens
-      return <- storedTokens
+      for vaultName in self.storedVaults.keys {
+         self.storedVaults[vaultName]?.send()
+      }
     }
 
     pub fun getViews(): [Type] {
@@ -90,41 +168,20 @@ pub contract Geeft: NonFungibleToken {
       return nil
     }
 
-    init(from: Address?, message: String?, nfts: @{String: [NonFungibleToken.NFT]}, tokens: @{String: FungibleToken.Vault}, extra: {String: AnyStruct}) {
+    init(from: Address?, message: String?, collections: @{String: CollectionContainer}, vaults: @{String: VaultContainer}, extra: {String: AnyStruct}) {
       self.id = self.uuid
       self.from = from
       self.message = message
-      self.storedNFTs <- nfts
-      self.storedTokens <- tokens
+      self.storedCollections <- collections
+      self.storedVaults <- vaults
       self.extra = extra
       Geeft.totalSupply = Geeft.totalSupply + 1
     }
 
     destroy() {
-      pre {
-        self.storedNFTs.keys.length == 0: "There are still NFTs left in this Geeft."
-        self.storedTokens.length == 0: "There are still tokens left in this Geeft."
-      }
-      destroy self.storedNFTs
-      destroy self.storedTokens
+      destroy self.storedCollections
+      destroy self.storedVaults
     }
-  }
-
-  pub fun sendGeeft(
-    from: Address?,
-    message: String?, 
-    nfts: @{String: [NonFungibleToken.NFT]}, 
-    tokens: @{String: FungibleToken.Vault}, 
-    extra: {String: AnyStruct}, 
-    recipient: Address
-  ) {
-    let geeft <- create NFT(from: from, message: message, nfts: <- nfts, tokens: <- tokens, extra: extra)
-    let collection = getAccount(recipient).getCapability(Geeft.CollectionPublicPath)
-                        .borrow<&Collection{NonFungibleToken.Receiver}>()
-                        ?? panic("The recipient does not have a Geeft Collection")
-
-    emit GeeftCreated(id: geeft.id, message: message, from: from, to: recipient)
-    collection.deposit(token: <- geeft)
   }
 
   pub resource interface CollectionPublic {
@@ -157,17 +214,18 @@ pub contract Geeft: NonFungibleToken {
       return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
     } 
 
-    pub fun borrowGeeft(id: UInt64): &NFT? {
-      if self.ownedNFTs[id] != nil {
-        let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
-        return ref as! &NFT
-      }
-      return nil
+    pub fun openGeeft(id: UInt64) {
+      let token <- self.ownedNFTs.remove(key: id) ?? panic("This Geeft does not exist.")
+      let geeft <- token as! @NFT
+      geeft.open()
+
+      emit GeeftOpened(id: geeft.id, by: self.owner!.address)
+      destroy geeft
     }
 
     pub fun getGeeftInfo(geeftId: UInt64): GeeftInfo {
-      let nft = (&self.ownedNFTs[geeftId] as auth &NonFungibleToken.NFT?)!
-      let geeft = nft as! &NFT
+      let ref = (&self.ownedNFTs[geeftId] as auth &NonFungibleToken.NFT?)!
+      let geeft = ref as! &NFT
       return geeft.getGeeftInfo()
     }
 
@@ -184,6 +242,31 @@ pub contract Geeft: NonFungibleToken {
     destroy() {
       destroy self.ownedNFTs
     }
+  }
+
+  pub fun sendGeeft(
+    from: Address?,
+    message: String?, 
+    collections: @{String: CollectionContainer}, 
+    vaults: @{String: VaultContainer}, 
+    extra: {String: AnyStruct}, 
+    recipient: Address
+  ) {
+    let geeft <- create NFT(from: from, message: message, collections: <- collections, vaults: <- vaults, extra: extra)
+    let collection = getAccount(recipient).getCapability(Geeft.CollectionPublicPath)
+                        .borrow<&Collection{NonFungibleToken.Receiver}>()
+                        ?? panic("The recipient does not have a Geeft Collection")
+
+    emit GeeftCreated(id: geeft.id, message: message, from: from, to: recipient)
+    collection.deposit(token: <- geeft)
+  }
+
+  pub fun createCollectionContainer(publicPath: PublicPath, storagePath: StoragePath, assets: @[{MetadataViews.Resolver}], to: Address): @CollectionContainer {
+    return <- create CollectionContainer(publicPath: publicPath, storagePath: storagePath, assets: <- assets, to: to)
+  }
+
+  pub fun createVaultContainer(receiverPath: PublicPath, storagePath: StoragePath, assets: @FungibleToken.Vault, to: Address): @VaultContainer {
+    return <- create VaultContainer(receiverPath: receiverPath, storagePath: storagePath, assets: <- assets, to: to)
   }
 
   pub fun createEmptyCollection(): @Collection {

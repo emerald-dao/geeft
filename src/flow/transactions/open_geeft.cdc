@@ -9,27 +9,18 @@ transaction(id: UInt64) {
   prepare(signer: AuthAccount) {
     let GeeftCollection = signer.borrow<&Geeft.Collection>(from: Geeft.CollectionStoragePath)
                             ?? panic("The signer does not have a Geeft Collection set up.")
-    
-    let geeft: @Geeft.NFT <- GeeftCollection.withdraw(withdrawID: id) as! @Geeft.NFT
 
-    /*** Collections ***/
-    let nfts <- geeft.openNFTs()
+    /*** Collection Setups ***/
 
     // INSERT COLLECTIONS HERE
 
-    assert(nfts.keys.length == 0, message: "There are still NFTs left in the Geeft.")
-    destroy nfts
-
-    /*** Vaults ***/
-    let tokens <- geeft.openTokens()
+    /*** Vault Setups ***/
 
     // INSERT VAULTS HERE
-
-    assert(tokens.length == 0, message: "There are still tokens left in the Geeft.")
-    destroy tokens
+    
+    GeeftCollection.openGeeft(id: id)
 
     /*** We're done ***/
-    destroy geeft
   }
 
   execute {

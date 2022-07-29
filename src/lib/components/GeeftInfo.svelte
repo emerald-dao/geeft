@@ -1,12 +1,12 @@
 <script>
   import { openGeeft } from "../../flow/actions.js";
   import { showGeeft } from "$lib/stores/MyGeefts.js";
-  import { readGeeftContents } from "../../flow/actions.js";
+  import { readGeeftInfo } from "../../flow/actions.js";
   import { openGiftStatus, user } from "../../flow/stores.js";
   import NFTCard from "./NFTCard.svelte";
   import VaultCard from "./VaultCard.svelte";
 
-  let unwrapped = readGeeftContents($user.addr, $showGeeft.id);
+  let unwrapped = readGeeftInfo($user.addr, $showGeeft.id);
 </script>
 
 {#if $openGiftStatus.inProgress}
@@ -27,13 +27,13 @@
       <p><b>From:</b> {$showGeeft.from}</p>
       <p><b>Message:</b> {$showGeeft.message}</p>
       <p><b>Contained Collections:</b></p>
-      {#each Object.keys($showGeeft.nfts) as collectionName}
+      {#each Object.keys($showGeeft.collections) as collectionName}
         <div class="tag">
-          {collectionName}: {$showGeeft.nfts[collectionName]}
+          {collectionName}: {$showGeeft.collections[collectionName].length}
         </div>
       {/each}
       <p><b>Contained Tokens:</b></p>
-      {#each $showGeeft.tokens as vaultName}
+      {#each Object.keys($showGeeft.vaults) as vaultName}
         <div class="tag">
           {vaultName}
         </div>
@@ -51,14 +51,14 @@
     {#await unwrapped then unwrapped}
       <div class="info">
         <h3>Geeft Contents</h3>
-        {#each Object.keys(unwrapped.nfts) as collectionName}
-          {#each unwrapped.nfts[collectionName] as nft}
+        {#each Object.keys(unwrapped.collections) as collectionName}
+          {#each unwrapped.collections[collectionName] as nft}
             <NFTCard {nft} {collectionName} />
           {/each}
         {/each}
-        {#each Object.keys(unwrapped.tokens) as vaultName}
+        {#each Object.keys(unwrapped.vaults) as vaultName}
           <VaultCard
-            balance={unwrapped.tokens[vaultName]}
+            balance={unwrapped.vaults[vaultName]}
             {vaultName}
             input={false} />
         {/each}

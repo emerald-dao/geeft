@@ -16,7 +16,7 @@
 	<title>Geeft</title>
 </svelte:head>
 
-<!-- <button on:click={setup}>Setup</button> -->
+<button on:click={setup}>Setup</button>
 
 <div class="main">
 	{#if !$user.loggedIn}

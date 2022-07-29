@@ -2,6 +2,7 @@ import NonFungibleToken from "../contracts/utilities/NonFungibleToken.cdc"
 import FungibleToken from "../contracts/utilities/FungibleToken.cdc"
 import Geeft from "../contracts/Geeft.cdc"
 import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
+// INSERT IMPORTS HERE
 
 /* ids
 {
@@ -18,7 +19,8 @@ import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
 */
 
 transaction(
-  storagePaths: {String: String}, 
+  publicPaths: {String: PublicPath},
+  storagePaths: {String: StoragePath}, 
   // NFTs
   ids: {String: [UInt64]}, 
   // Vaults
@@ -37,23 +39,22 @@ transaction(
       signer.link<&Geeft.Collection{MetadataViews.ResolverCollection, Geeft.CollectionPublic, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic}>(Geeft.CollectionPublicPath, target: Geeft.CollectionStoragePath)
     }
 
-    let preparedNFTs: @{String: [NonFungibleToken.NFT]} <- {}
-    for collectionName in ids.keys {
-      let batch: @[NonFungibleToken.NFT] <- []
-      let collection = signer.borrow<&{NonFungibleToken.Provider}>(from: StoragePath(identifier: storagePaths[collectionName]!)!)!
-      for id in ids[collectionName]! {
-        batch.append(<- collection.withdraw(withdrawID: id))
-      }
-      preparedNFTs[collectionName] <-! batch
-    }
+    // Prepare NFTs
 
-    let preparedTokens: @{String: FungibleToken.Vault} <- {}
+    let preparedNFTs: @{String: Geeft.CollectionContainer} <- {}
+
+    // INSERT COLLECTIONS HERE
+
+    // Prepare Tokens
+
+    let preparedTokens: @{String: Geeft.VaultContainer} <- {}
     for vaultName in amounts.keys {
-      let vault = signer.borrow<&{FungibleToken.Provider}>(from: StoragePath(identifier: storagePaths[vaultName]!)!)!
-      preparedTokens[vaultName] <-! vault.withdraw(amount: amounts[vaultName]!)
+      let vault = signer.borrow<&{FungibleToken.Provider}>(from: storagePaths[vaultName]!)!
+      let batch <- Geeft.createVaultContainer(receiverPath: publicPaths[vaultName]!, storagePath: storagePaths[vaultName]!, assets: <- vault.withdraw(amount: amounts[vaultName]!), to: recipient)
+      preparedTokens[vaultName] <-! batch
     }
 
-    Geeft.sendGeeft(from: signer.address, message: message, nfts: <- preparedNFTs, tokens: <- preparedTokens, extra: extra, recipient: recipient)
+    Geeft.sendGeeft(from: signer.address, message: message, collections: <- preparedNFTs, vaults: <- preparedTokens, extra: extra, recipient: recipient)
   }
 
   execute {

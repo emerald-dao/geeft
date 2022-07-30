@@ -4,7 +4,7 @@ import { get } from 'svelte/store';
 import * as fcl from '@onflow/fcl';
 import './config';
 
-import { user, transactionStatus, transactionInProgress, addresses, network, txId, openGiftStatus, sendGiftStatus } from './stores';
+import { user, transactionStatus, transactionInProgress, addresses, network, txId, openGiftStatus, sendGiftStatus, setupStatus } from './stores';
 import { contractData } from './contractData';
 
 ///////////////
@@ -40,7 +40,7 @@ export const authenticate = () => {
 
 function translateError(error) {
   if (error.includes('The recipient does not have a Geeft Collection')) {
-    return 'The recipient must set up a Geeft Collection first.'
+    return 'The recipient must set up a Geeft Collection first by going to https://geeft.ecdao.org/ and clicking "Setup" on the main page.'
   }
   return error
 }
@@ -88,6 +88,8 @@ export const setup = async () => {
 
   initTransactionState();
 
+  setupStatus.set({ inProgress: true, success: false });
+
   try {
     const transactionId = await fcl.mutate({
       cadence: replaceWithProperValues(setupTx),
@@ -103,11 +105,17 @@ export const setup = async () => {
       transactionStatus.set(res.status);
       console.log(res);
       if (res.status === 4) {
+        if (res.statusCode === 0) {
+          setupStatus.set({ success: true, inProgress: false });
+        } else {
+          setupStatus.set({ success: false, inProgress: false, error: res.errorMessage });
+        }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
     });
   } catch (e) {
     console.log(e);
+    setupStatus.set({ success: false, inProgress: false, error: e });
     transactionStatus.set(99);
   }
 }

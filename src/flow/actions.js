@@ -212,9 +212,9 @@ export const openGeeft = async (geeft) => {
     if signer.borrow<&${collectionName}.Collection>(from: /storage/${storagePath}) == nil {
       signer.save(<- ${collectionName}.createEmptyCollection(), to: /storage/${storagePath})
     }
-    if signer.getCapability<&${collectionName}.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection${collectionPublic ? `, ${collectionName}.${collectionPublic}` : null}}>(/public/${publicPath}).borrow() == nil {
+    if signer.getCapability<&${collectionName}.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection${collectionPublic ? `, ${collectionName}.${collectionPublic}` : ''}}>(/public/${publicPath}).borrow() == nil {
         signer.unlink(/public/${publicPath})
-        signer.link<&${collectionName}.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection${collectionPublic ? `, ${collectionName}.${collectionPublic}` : null}}>(/public/${publicPath}, target: /storage/${storagePath})
+        signer.link<&${collectionName}.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection${collectionPublic ? `, ${collectionName}.${collectionPublic}` : ''}}>(/public/${publicPath}, target: /storage/${storagePath})
     }
     `;
     imports += `import ${collectionName} from ${networks[currentNetwork]}\n`

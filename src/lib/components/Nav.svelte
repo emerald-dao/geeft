@@ -33,6 +33,7 @@
   }
   h1 {
     font-size: 40px;
+    font-family: Century Gothic, sans-serif;
   }
   button {
     padding: 10px;

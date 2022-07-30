@@ -39,12 +39,16 @@
 						tokens={discovered.vaults} />
 					<Send />
 				{/await}
-			{:else if $setupStatus.inProgress}
-				<button>Setting up...</button>
-			{:else if !$setupStatus.success}
-				<button on:click={setup}>Setup</button>
 			{:else}
-				<button>Awesomeness! Please refresh the page.</button>
+				<article class="please">
+					{#if $setupStatus.inProgress}
+						<button>Setting up...</button>
+					{:else if !$setupStatus.success}
+						<button on:click={setup}>Setup</button>
+					{:else}
+						<button>Awesomeness! Please refresh the page.</button>
+					{/if}
+				</article>
 			{/if}
 		{/await}
 	{/if}
@@ -63,7 +67,7 @@
 	.main {
 		position: relative;
 		top: 0px;
-		padding: 10vw;
+		padding: 2vw 10vw 10vw 10vw;
 		width: 80vw;
 	}
 
@@ -79,9 +83,6 @@
 		}
 	}
 	button {
-		position: relative;
-		left: 50%;
-		transform: translateX(-50%);
 		padding: 10px;
 		background-color: rgb(84, 230, 174);
 		border: none;

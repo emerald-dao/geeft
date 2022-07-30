@@ -14,19 +14,19 @@ transaction() {
       signer.link<&Geeft.Collection{MetadataViews.ResolverCollection, Geeft.CollectionPublic, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic}>(Geeft.CollectionPublicPath, target: Geeft.CollectionStoragePath)
     }
 
-    let admin <- ExampleNFT.createMinter()
-    let nft1 <- admin.mintNFT(name: "Jacob #1", description: "Jacob #1 Description", thumbnail: "")
-    let nft2 <- admin.mintNFT(name: "Jacob #2", description: "Jacob #2 Description", thumbnail: "")
-    let nft3 <- admin.mintNFT(name: "Jacob #3", description: "Jacob #3 Description", thumbnail: "")
-    destroy admin 
+    // let admin <- ExampleNFT.createMinter()
+    // let nft1 <- admin.mintNFT(name: "Jacob #1", description: "Jacob #1 Description", thumbnail: "")
+    // let nft2 <- admin.mintNFT(name: "Jacob #2", description: "Jacob #2 Description", thumbnail: "")
+    // let nft3 <- admin.mintNFT(name: "Jacob #3", description: "Jacob #3 Description", thumbnail: "")
+    // destroy admin 
     
-    let collection <- ExampleNFT.createEmptyCollection()
-    collection.deposit(token: <- nft1)
-    collection.deposit(token: <- nft2)
-    collection.deposit(token: <- nft3)
+    // let collection <- ExampleNFT.createEmptyCollection()
+    // collection.deposit(token: <- nft1)
+    // collection.deposit(token: <- nft2)
+    // collection.deposit(token: <- nft3)
 
-    signer.save(<- collection, to: /storage/ExampleNFTCollection)
-    signer.link<&ExampleNFT.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection}>(/public/ExampleNFTCollection, target: /storage/ExampleNFTCollection)
+    // signer.save(<- collection, to: /storage/ExampleNFTCollection)
+    // signer.link<&ExampleNFT.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection}>(/public/ExampleNFTCollection, target: /storage/ExampleNFTCollection)
 
   }
 

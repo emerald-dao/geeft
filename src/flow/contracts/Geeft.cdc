@@ -16,20 +16,20 @@ pub contract Geeft: NonFungibleToken {
   pub event Deposit(id: UInt64, to: Address?)
 
   // Geeft Events
-  pub event GeeftCreated(id: UInt64, message: String?, from: Address?, to: Address)
+  pub event GeeftCreated(id: UInt64, message: String?, createdBy: Address?, to: Address)
   pub event GeeftOpened(id: UInt64, by: Address)
 
   pub struct GeeftInfo {
     pub let id: UInt64
-    pub let from: Address?
+    pub let createdBy: Address?
     pub let message: String?
     pub let collections: {String: [MetadataViews.Display?]}
     pub let vaults: {String: UFix64?}
     pub let extra: {String: AnyStruct}
 
-    init(id: UInt64, from: Address?, message: String?, collections: {String: [MetadataViews.Display?]}, vaults: {String: UFix64?}, extra: {String: AnyStruct}) {
+    init(id: UInt64, createdBy: Address?, message: String?, collections: {String: [MetadataViews.Display?]}, vaults: {String: UFix64?}, extra: {String: AnyStruct}) {
       self.id = id
-      self.from = from
+      self.createdBy = createdBy
       self.message = message
       self.collections = collections
       self.vaults = vaults
@@ -138,7 +138,7 @@ pub contract Geeft: NonFungibleToken {
   // This represents a Geeft
   pub resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver {
     pub let id: UInt64
-    pub let from: Address?
+    pub let createdBy: Address?
     pub let message: String?
     // ex. "FLOAT" -> A bunch of FLOATs and associated information
     pub var storedCollections: @{String: CollectionContainer}
@@ -157,7 +157,7 @@ pub contract Geeft: NonFungibleToken {
         vaults[vaultName] = self.storedVaults[vaultName]?.getBalance()
       }
 
-      return GeeftInfo(id: self.id, from: self.from, message: self.message, collections: collections, vaults: vaults, extra: self.extra)
+      return GeeftInfo(id: self.id, createdBy: self.createdBy, message: self.message, collections: collections, vaults: vaults, extra: self.extra)
     }
 
     pub fun open(opener: Address): Bool {
@@ -194,7 +194,7 @@ pub contract Geeft: NonFungibleToken {
         case Type<MetadataViews.Display>():
           return MetadataViews.Display(
             name: "Geeft #".concat(self.id.toString()),
-            description: self.message ?? (self.from == nil ? "This is a Geeft." : "This is a Geeft from ".concat(self.from!.toString()).concat(".")),
+            description: self.message ?? (self.createdBy == nil ? "This is a Geeft." : "This is a Geeft created by ".concat(self.createdBy!.toString()).concat(".")),
             thumbnail: MetadataViews.HTTPFile(
               url: "https://i.imgur.com/dZxbOEa.png"
             )
@@ -203,9 +203,9 @@ pub contract Geeft: NonFungibleToken {
       return nil
     }
 
-    init(from: Address?, message: String?, collections: @{String: CollectionContainer}, vaults: @{String: VaultContainer}, extra: {String: AnyStruct}) {
+    init(createdBy: Address?, message: String?, collections: @{String: CollectionContainer}, vaults: @{String: VaultContainer}, extra: {String: AnyStruct}) {
       self.id = self.uuid
-      self.from = from
+      self.createdBy = createdBy
       self.message = message
       self.storedCollections <- collections
       self.storedVaults <- vaults
@@ -285,19 +285,19 @@ pub contract Geeft: NonFungibleToken {
   }
 
   pub fun sendGeeft(
-    from: Address?,
+    createdBy: Address?,
     message: String?, 
     collections: @{String: CollectionContainer}, 
     vaults: @{String: VaultContainer}, 
     extra: {String: AnyStruct}, 
     recipient: Address
   ) {
-    let geeft <- create NFT(from: from, message: message, collections: <- collections, vaults: <- vaults, extra: extra)
+    let geeft <- create NFT(createdBy: createdBy, message: message, collections: <- collections, vaults: <- vaults, extra: extra)
     let collection = getAccount(recipient).getCapability(Geeft.CollectionPublicPath)
                         .borrow<&Collection{NonFungibleToken.Receiver}>()
                         ?? panic("The recipient does not have a Geeft Collection")
 
-    emit GeeftCreated(id: geeft.id, message: message, from: from, to: recipient)
+    emit GeeftCreated(id: geeft.id, message: message, createdBy: createdBy, to: recipient)
     collection.deposit(token: <- geeft)
   }
 

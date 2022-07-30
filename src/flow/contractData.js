@@ -118,7 +118,7 @@ export const contractData = {
       networks: {
         emulator: "0xf8d6e0586b0a20c7",
         testnet: "",
-        mainnet: "0x47fa18bd1d39e427"
+        mainnet: "0x80ec5732ee129467"
       }
     },
     NonFungibleToken: {

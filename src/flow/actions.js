@@ -37,6 +37,13 @@ export const authenticate = () => {
   }
 };
 
+function translateError(error) {
+  if (error.includes('The recipient does not have a Geeft Collection')) {
+    return 'The recipient must set up a Geeft Collection first.'
+  }
+  return error
+}
+
 function switchNetwork(newNetwork) {
   if (newNetwork === 'emulator') {
     fcl
@@ -183,14 +190,14 @@ export const createGeeft = async () => {
         if (res.statusCode === 0) {
           sendGiftStatus.set({ success: true, inProgress: false });
         } else {
-          sendGiftStatus.set({ success: false, inProgress: false, error: res.errorMessage });
+          sendGiftStatus.set({ success: false, inProgress: false, error: translateError(res.) });
         }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
     });
   } catch (e) {
     console.log(e);
-    sendGiftStatus.set({ success: false, inProgress: false, error: e });
+    sendGiftStatus.set({ success: false, inProgress: false, error: translateError(e) });
     transactionStatus.set(99);
   }
 }
@@ -263,7 +270,7 @@ export const openGeeft = async (geeft) => {
         if (res.statusCode === 0) {
           openGiftStatus.set({ success: true, inProgress: false });
         } else {
-          openGiftStatus.set({ success: false, inProgress: false, error: errorMessage });
+          openGiftStatus.set({ success: false, inProgress: false, error: res. });
         }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }

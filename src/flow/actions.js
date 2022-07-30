@@ -108,14 +108,14 @@ export const setup = async () => {
         if (res.statusCode === 0) {
           setupStatus.set({ success: true, inProgress: false });
         } else {
-          setupStatus.set({ success: false, inProgress: false, error: res.errorMessage });
+          setupStatus.set({ success: false, inProgress: false, error: translateError(res.errorMessage) });
         }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
     });
   } catch (e) {
     console.log(e);
-    setupStatus.set({ success: false, inProgress: false, error: e });
+    setupStatus.set({ success: false, inProgress: false, error: translateError(e) });
     transactionStatus.set(99);
   }
 }
@@ -279,7 +279,7 @@ export const openGeeft = async (geeft) => {
         if (res.statusCode === 0) {
           openGiftStatus.set({ success: true, inProgress: false });
         } else {
-          openGiftStatus.set({ success: false, inProgress: false, error: res.errorMessage });
+          openGiftStatus.set({ success: false, inProgress: false, error: translateError(res.errorMessage) });
         }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
@@ -287,7 +287,7 @@ export const openGeeft = async (geeft) => {
   } catch (e) {
     console.log(e);
     transactionStatus.set(99);
-    openGiftStatus.set({ success: false, inProgress: false, error: e });
+    openGiftStatus.set({ success: false, inProgress: false, error: translateError(e) });
   }
 }
 

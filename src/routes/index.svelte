@@ -44,7 +44,7 @@
 			{:else if !$setupStatus.success}
 				<button on:click={setup}>Setup</button>
 			{:else}
-				<button>Set Up! Please refresh the page.</button>
+				<button>Awesomeness! Please refresh the page.</button>
 			{/if}
 		{/await}
 	{/if}

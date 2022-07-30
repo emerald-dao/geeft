@@ -1,3 +1,6 @@
+// CREATED BY: Emerald City DAO
+// REASON: For the sake of love
+
 import NonFungibleToken from "./utilities/NonFungibleToken.cdc"
 import FungibleToken from "./utilities/FungibleToken.cdc"
 import MetadataViews from "./utilities/MetadataViews.cdc"

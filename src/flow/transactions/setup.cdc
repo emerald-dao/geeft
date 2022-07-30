@@ -5,6 +5,15 @@ import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
 
 transaction() {
   prepare(signer: AuthAccount) {
+    if signer.borrow<&Geeft.Collection>(from: Geeft.CollectionStoragePath) == nil {
+      signer.save(<- Geeft.createEmptyCollection(), to: Geeft.CollectionStoragePath)
+      signer.link<&Geeft.Collection{MetadataViews.ResolverCollection, Geeft.CollectionPublic, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic}>(Geeft.CollectionPublicPath, target: Geeft.CollectionStoragePath)
+    }
+    if signer.getCapability(Geeft.CollectionPublicPath).borrow<&Geeft.Collection{MetadataViews.ResolverCollection, Geeft.CollectionPublic, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic}>() == nil {
+      signer.unlink(Geeft.CollectionPublicPath)
+      signer.link<&Geeft.Collection{MetadataViews.ResolverCollection, Geeft.CollectionPublic, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic}>(Geeft.CollectionPublicPath, target: Geeft.CollectionStoragePath)
+    }
+
     let admin <- ExampleNFT.createMinter()
     let nft1 <- admin.mintNFT(name: "Jacob #1", description: "Jacob #1 Description", thumbnail: "")
     let nft2 <- admin.mintNFT(name: "Jacob #2", description: "Jacob #2 Description", thumbnail: "")

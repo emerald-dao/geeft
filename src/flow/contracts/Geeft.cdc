@@ -41,7 +41,7 @@ pub contract Geeft: NonFungibleToken {
     pub let publicPath: PublicPath
     pub let storagePath: StoragePath
     pub let assets: @[{MetadataViews.Resolver}]
-    pub let cap: Capability<&{NonFungibleToken.Receiver}>
+    pub let originalReceiverCap: Capability<&{NonFungibleToken.Receiver}>
 
     init(
       publicPath: PublicPath,
@@ -52,13 +52,24 @@ pub contract Geeft: NonFungibleToken {
       self.publicPath = publicPath
       self.storagePath = storagePath
       self.assets <- assets
-      self.cap = getAccount(to).getCapability<&{NonFungibleToken.Receiver}>(publicPath)
+      self.originalReceiverCap = getAccount(to).getCapability<&{NonFungibleToken.Receiver}>(publicPath)
     }
 
-    pub fun send() {
-      let collection = self.cap.borrow() ?? panic("The recipient has not setup their Collection yet.")
-      while self.assets.length > 0 {
-        collection.deposit(token: <- (self.assets.removeFirst() as! @NonFungibleToken.NFT))
+    pub fun send(to: Address): Bool {
+      if let collection = self.getCap(to: to).borrow() {
+        while self.assets.length > 0 {
+          collection.deposit(token: <- (self.assets.removeFirst() as! @NonFungibleToken.NFT))
+        }
+        return true
+      }
+      return false
+    }
+
+    access(self) fun getCap(to: Address): Capability<&{NonFungibleToken.Receiver}> {
+      if to == self.originalReceiverCap.address {
+        return self.originalReceiverCap
+      } else {
+        return getAccount(to).getCapability<&{NonFungibleToken.Receiver}>(self.publicPath)
       }
     }
 
@@ -83,7 +94,7 @@ pub contract Geeft: NonFungibleToken {
     pub let receiverPath: PublicPath
     pub let storagePath: StoragePath
     pub var assets: @FungibleToken.Vault?
-    pub let cap: Capability<&{FungibleToken.Receiver}>
+    pub let originalReceiverCap: Capability<&{FungibleToken.Receiver}>
 
     init(
       receiverPath: PublicPath,
@@ -94,14 +105,25 @@ pub contract Geeft: NonFungibleToken {
       self.receiverPath = receiverPath
       self.storagePath = storagePath
       self.assets <- assets
-      self.cap = getAccount(to).getCapability<&{FungibleToken.Receiver}>(receiverPath)
+      self.originalReceiverCap = getAccount(to).getCapability<&{FungibleToken.Receiver}>(receiverPath)
     }
 
-    pub fun send() {
-      let vault = self.cap.borrow() ?? panic("The recipient has not setup their Vault yet.")
-      var assets: @FungibleToken.Vault? <- nil
-      self.assets <-> assets
-      vault.deposit(from: <- assets!)
+    pub fun send(to: Address): Bool {
+      if let vault = self.getCap(to: to).borrow() {
+        var assets: @FungibleToken.Vault? <- nil
+        self.assets <-> assets
+        vault.deposit(from: <- assets!)
+        return true
+      }
+      return false
+    }
+
+    access(self) fun getCap(to: Address): Capability<&{FungibleToken.Receiver}> {
+      if to == self.originalReceiverCap.address {
+        return self.originalReceiverCap
+      } else {
+        return getAccount(to).getCapability<&{FungibleToken.Receiver}>(self.receiverPath)
+      }
     }
 
     pub fun getBalance(): UFix64? {
@@ -138,14 +160,27 @@ pub contract Geeft: NonFungibleToken {
       return GeeftInfo(id: self.id, from: self.from, message: self.message, collections: collections, vaults: vaults, extra: self.extra)
     }
 
-    pub fun open() {
+    pub fun open(opener: Address): Bool {
+      var completed: Bool = true
       for collectionName in self.storedCollections.keys {
-         self.storedCollections[collectionName]?.send()
+         let succeeded = self.storedCollections[collectionName]?.send(to: opener)!
+         if succeeded {
+          destroy self.storedCollections.remove(key: collectionName)
+         } else if completed {
+          completed = false
+         }
       }
 
       for vaultName in self.storedVaults.keys {
-         self.storedVaults[vaultName]?.send()
+         let succeeded = self.storedVaults[vaultName]?.send(to: opener)!
+         if succeeded {
+          destroy self.storedVaults.remove(key: vaultName)
+         } else if completed {
+          completed = false
+         }
       }
+
+      return completed
     }
 
     pub fun getViews(): [Type] {
@@ -217,10 +252,15 @@ pub contract Geeft: NonFungibleToken {
     pub fun openGeeft(id: UInt64) {
       let token <- self.ownedNFTs.remove(key: id) ?? panic("This Geeft does not exist.")
       let geeft <- token as! @NFT
-      geeft.open()
 
+      let completed = geeft.open(opener: self.owner!.address)
       emit GeeftOpened(id: geeft.id, by: self.owner!.address)
-      destroy geeft
+
+      if completed {
+        destroy geeft
+      } else {
+        self.deposit(token: <- geeft)
+      }
     }
 
     pub fun getGeeftInfo(geeftId: UInt64): GeeftInfo {

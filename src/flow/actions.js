@@ -190,7 +190,7 @@ export const createGeeft = async () => {
         if (res.statusCode === 0) {
           sendGiftStatus.set({ success: true, inProgress: false });
         } else {
-          sendGiftStatus.set({ success: false, inProgress: false, error: translateError(res.) });
+          sendGiftStatus.set({ success: false, inProgress: false, error: translateError(res.errorMessage) });
         }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }
@@ -270,7 +270,7 @@ export const openGeeft = async (geeft) => {
         if (res.statusCode === 0) {
           openGiftStatus.set({ success: true, inProgress: false });
         } else {
-          openGiftStatus.set({ success: false, inProgress: false, error: res. });
+          openGiftStatus.set({ success: false, inProgress: false, error: res.errorMessage });
         }
         setTimeout(() => transactionInProgress.set(false), 2000);
       }

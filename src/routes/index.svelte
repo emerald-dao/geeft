@@ -2,7 +2,7 @@
 	import { user } from "../flow/stores.js";
 	import Selector from "$lib/components/Selector.svelte";
 	import Display from "$lib/components/Display.svelte";
-	import { discover, setup } from "../flow/actions.js";
+	import { areSetup, discover, setup } from "../flow/actions.js";
 	import ViewSelected from "$lib/components/ViewSelected.svelte";
 	import Send from "$lib/components/Send.svelte";
 
@@ -21,7 +21,7 @@
 <div class="main">
 	{#if !$user.loggedIn}
 		<article class="please">Please connect your wallet.</article>
-	{:else}
+	{:else if areSetup($user.addr)}
 		{#await discovered then discovered}
 			<div class="select">
 				<Selector
@@ -36,6 +36,8 @@
 				tokens={discovered.vaults} />
 			<Send />
 		{/await}
+	{:else}
+		<button on:click={setup}>Setup</button>
 	{/if}
 </div>
 

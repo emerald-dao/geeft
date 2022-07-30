@@ -14,6 +14,7 @@ import { contractData } from './contractData';
 import discoverScript from "./scripts/discover.cdc?raw";
 import readGeeftsScript from "./scripts/read_geefts.cdc?raw";
 import readGeeftInfoScript from "./scripts/geeft_info.cdc?raw";
+import areSetupScript from "./scripts/are_setup.cdc?raw";
 // Transactions
 import setupTx from "./transactions/setup.cdc?raw";
 import createGeeftTx from "./transactions/create_geeft.cdc?raw";
@@ -341,6 +342,22 @@ export const readGeeftInfo = async (address, geeftId) => {
       args: (arg, t) => [
         arg(address, t.Address),
         arg(geeftId, t.UInt64)
+      ],
+    });
+
+    console.log(response);
+    return response;
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+export const areSetup = async (address) => {
+  try {
+    const response = await fcl.query({
+      cadence: replaceWithProperValues(areSetupScript),
+      args: (arg, t) => [
+        arg(address, t.Address)
       ],
     });
 

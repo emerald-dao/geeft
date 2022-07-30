@@ -20,13 +20,13 @@ transaction() {
     // let nft3 <- admin.mintNFT(name: "Jacob #3", description: "Jacob #3 Description", thumbnail: "")
     // destroy admin 
     
-    // let collection <- ExampleNFT.createEmptyCollection()
+    let collection <- ExampleNFT.createEmptyCollection()
     // collection.deposit(token: <- nft1)
     // collection.deposit(token: <- nft2)
     // collection.deposit(token: <- nft3)
 
-    // signer.save(<- collection, to: /storage/ExampleNFTCollection)
-    // signer.link<&ExampleNFT.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection}>(/public/ExampleNFTCollection, target: /storage/ExampleNFTCollection)
+    signer.save(<- collection, to: /storage/ExampleNFTCollection)
+    signer.link<&ExampleNFT.Collection{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection}>(/public/ExampleNFTCollection, target: /storage/ExampleNFTCollection)
 
   }
 

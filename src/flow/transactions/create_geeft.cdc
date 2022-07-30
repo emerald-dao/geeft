@@ -54,7 +54,7 @@ transaction(
       preparedTokens[vaultName] <-! batch
     }
 
-    Geeft.sendGeeft(from: signer.address, message: message, collections: <- preparedNFTs, vaults: <- preparedTokens, extra: extra, recipient: recipient)
+    Geeft.sendGeeft(createdBy: signer.address, message: message, collections: <- preparedNFTs, vaults: <- preparedTokens, extra: extra, recipient: recipient)
   }
 
   execute {

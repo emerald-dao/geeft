@@ -101,6 +101,9 @@ export const setup = async () => {
       limit: 9999,
     });
     console.log({ transactionId });
+
+    txId.set(transactionId);
+    
     fcl.tx(transactionId).subscribe((res) => {
       transactionStatus.set(res.status);
       console.log(res);

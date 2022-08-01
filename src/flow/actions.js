@@ -132,6 +132,9 @@ export const createGeeft = async () => {
   let collectionAdditions = '';
   let imports = '';
   for (const collectionName in selectedNFTsStore) {
+    if (selectedNFTsStore[collectionName].length === 0) {
+      continue;
+    }
     const { networks, publicPath, storagePath } = contractData.NFT[collectionName];
     collectionIds.push({ key: collectionName, value: selectedNFTsStore[collectionName] });
     publicPaths.push({

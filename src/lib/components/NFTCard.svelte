@@ -26,8 +26,8 @@
     src={"url" in nft.thumbnail
       ? nft.thumbnail.url
       : nft.thumbnail.path !== null
-      ? `https://ipfs.infura.io/ipfs/${nft.thumbnail.cid}/${nft.thumbnail.path}`
-      : `https://ipfs.infura.io/ipfs/${nft.thumbnail.cid}`}
+      ? `https://cloudflare-ipfs.com/ipfs/${nft.thumbnail.cid}/${nft.thumbnail.path}`
+      : `https://cloudflare-ipfs.com/ipfs/${nft.thumbnail.cid}`}
     alt="{nft.name} image" />
   <h3>{nft.name}</h3>
   <p>{nft.description.substring(0, 90)}...</p>

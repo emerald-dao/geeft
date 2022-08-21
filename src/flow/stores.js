@@ -11,13 +11,13 @@ export const addresses = derived(
 	([$network]) => {
 		return {
 			Geeft: contractData.utility.Geeft.networks[$network],
-			ExampleNFT: contractData.NFT.ExampleNFT.networks[$network],
 			NonFungibleToken: contractData.utility.NonFungibleToken.networks[$network],
 			MetadataViews: contractData.utility.MetadataViews.networks[$network],
 			FungibleToken: contractData.utility.FungibleToken.networks[$network],
 			FlowToken: contractData.utility.FlowToken.networks[$network],
 			ECTreasury: contractData.utility.ECTreasury.networks[$network],
-			FLOAT: contractData.NFT.FLOAT.networks[$network]
+			FLOAT: contractData.utility.FLOAT.networks[$network],
+			NFTCatalog: contractData.utility.NFTCatalog.networks[$network]
 		}
 	}
 )

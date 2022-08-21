@@ -9,7 +9,7 @@
 
   export let collections;
   export let tokens;
-  $: collection = collections[$currentCollection] || {};
+  $: collection = collections[$currentCollection].nfts || {};
   $: token = tokens[$currentToken] || "0.0";
 </script>
 

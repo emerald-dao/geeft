@@ -18,7 +18,7 @@
     {#each Object.keys($selectedNFTs) as collectionName}
       {#each $selectedNFTs[collectionName] as nftId}
         <NFTCard
-          nft={collections[collectionName][nftId]}
+          nft={collections[collectionName].nfts[nftId]}
           {collectionName}
           {nftId} />
       {/each}

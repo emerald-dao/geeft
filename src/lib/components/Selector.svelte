@@ -22,16 +22,14 @@
   </div>
   {#if $displayNFTs === true}
     {#each Object.keys(collections) as collection}
-      {#if Object.keys(collections[collection]).length !== 0}
-        <button
-          on:click={() => ($currentCollection = collection)}
-          class:selected={$currentCollection === collection}>
-          <img
-            src="/images/collections/{collection}.png"
-            alt="{collection} logo" />
-          <p>{collection}</p>
-        </button>
-      {/if}
+      <button
+        on:click={() => ($currentCollection = collection)}
+        class:selected={$currentCollection === collection}>
+        <img
+          src={collections[collection].image.url}
+          alt="{collection} logo" />
+        <p>{collection}</p>
+      </button>
     {/each}
   {:else}
     {#each tokens as token}

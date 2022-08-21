@@ -2,6 +2,7 @@ import NonFungibleToken from "../contracts/utilities/NonFungibleToken.cdc"
 import FungibleToken from "../contracts/utilities/FungibleToken.cdc"
 import Geeft from "../contracts/Geeft.cdc"
 import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
+import NFTCatalog from "../contracts/utilities/NFTCatalog.cdc"
 // INSERT IMPORTS HERE
 
 /* ids
@@ -13,18 +14,18 @@ import MetadataViews from "../contracts/utilities/MetadataViews.cdc"
 
 /* storagePaths
 {
-  "FLOAT": "FLOATCollectionStoragePath",
-  "Flovatar": "FlovatarCollection"
+  "FlowToken": "flowTokenVault"
 }
 */
 
 transaction(
-  publicPaths: {String: PublicPath},
-  storagePaths: {String: StoragePath}, 
   // NFTs
   ids: {String: [UInt64]}, 
   // Vaults
+  publicPaths: {String: PublicPath},
+  storagePaths: {String: StoragePath}, 
   amounts: {String: UFix64},
+  // Other Info
   message: String?, 
   extra: {String: String},
   recipient: Address
@@ -42,6 +43,7 @@ transaction(
     // Prepare NFTs
 
     let preparedNFTs: @{String: Geeft.CollectionContainer} <- {}
+    let catalog: {String: NFTCatalog.NFTCatalogMetadata} = NFTCatalog.getCatalog()
 
     // INSERT COLLECTIONS HERE
 

@@ -12,9 +12,11 @@ import { contractData } from './contractData';
 ///////////////
 // Scripts
 import discoverScript from "./scripts/discover.cdc?raw";
+import newDiscoverScript from "./scripts/new_discover.cdc?raw";
 import readGeeftsScript from "./scripts/read_geefts.cdc?raw";
 import readGeeftInfoScript from "./scripts/geeft_info.cdc?raw";
 import areSetupScript from "./scripts/are_setup.cdc?raw";
+import getImportsScript from "./scripts/get_imports.cdc?raw";
 // Transactions
 import setupTx from "./transactions/setup.cdc?raw";
 import createGeeftTx from "./transactions/create_geeft.cdc?raw";
@@ -77,9 +79,9 @@ export function replaceWithProperValues(script, contractName = '', contractAddre
     .replace('"../contracts/Geeft.cdc"', addressList.Geeft)
     .replace('"../contracts/utilities/MetadataViews.cdc"', addressList.MetadataViews)
     .replace('"../contracts/utilities/NonFungibleToken.cdc"', addressList.NonFungibleToken)
-    .replace('"../contracts/projects/ExampleNFT/ExampleNFT.cdc"', addressList.ExampleNFT)
     .replace('"../contracts/utilities/FungibleToken.cdc"', addressList.FungibleToken)
     .replace('"../contracts/projects/FLOAT/FLOAT.cdc"', addressList.FLOAT)
+    .replace('"../contracts/utilities/NFTCatalog.cdc"', addressList.NFTCatalog)
 }
 
 // ****** Transactions ****** //
@@ -128,37 +130,33 @@ export const createGeeft = async () => {
 
   let storagePaths = [];
   let publicPaths = [];
-  const currentNetwork = get(network);
 
   const selectedNFTsStore = get(selectedNFTs);
+  console.log(selectedNFTsStore)
   let collectionIds = [];
   let collectionAdditions = '';
+  const importInfoForCollections = await getImports(Object.keys(selectedNFTsStore));
   let imports = '';
   for (const collectionName in selectedNFTsStore) {
     if (selectedNFTsStore[collectionName].length === 0) {
       continue;
     }
-    const { networks, publicPath, storagePath } = contractData.NFT[collectionName];
     collectionIds.push({ key: collectionName, value: selectedNFTsStore[collectionName] });
-    publicPaths.push({
-      key: collectionName,
-      value: { domain: 'public', identifier: publicPath }
-    });
-    storagePaths.push({
-      key: collectionName,
-      value: { domain: 'storage', identifier: storagePath }
-    })
+
     collectionAdditions += `
+    let ${collectionName}Metadata: NFTCatalog.NFTCatalogMetadata = catalog["${collectionName}"]!
+    let ${collectionName}PublicPath: PublicPath = collectionMetadata.collectionData.publicPath
+    let ${collectionName}StoragePath: StoragePath = collectionMetadata.collectionData.storagePath
     let ${collectionName}Batch: @[{MetadataViews.Resolver}] <- []
-    let ${collectionName}Collection = signer.borrow<&{NonFungibleToken.Provider, MetadataViews.ResolverCollection}>(from: storagePaths["${collectionName}"]!)!
+    let ${collectionName}Collection = signer.borrow<&{NonFungibleToken.Provider, MetadataViews.ResolverCollection}>(from: ${collectionName}StoragePath)!
     for id in ids["${collectionName}"]! {
       let nft <- ${collectionName}Collection.withdraw(withdrawID: id) as! @${collectionName}.NFT
       ${collectionName}Batch.append(<- (nft as @{MetadataViews.Resolver}))
     }
-    let ${collectionName}Container <- Geeft.createCollectionContainer(publicPath: publicPaths["${collectionName}"]!, storagePath: storagePaths["${collectionName}"]!, assets: <- ${collectionName}Batch, to: recipient)
+    let ${collectionName}Container <- Geeft.createCollectionContainer(publicPath: ${collectionName}PublicPath, storagePath: ${collectionName}StoragePath, assets: <- ${collectionName}Batch, to: recipient)
     preparedNFTs["${collectionName}"] <-! ${collectionName}Container\n
     `;
-    imports += `import ${collectionName} from ${networks[currentNetwork]}\n`
+    imports += `import ${collectionName} from ${importInfoForCollections[collectionName]}\n`
   }
 
   const selectedVaultsStore = get(selectedVaults);
@@ -182,9 +180,9 @@ export const createGeeft = async () => {
     const transactionId = await fcl.mutate({
       cadence: replaceWithProperValues(createGeeftTx).replace("// INSERT COLLECTIONS HERE", collectionAdditions).replace("// INSERT IMPORTS HERE", imports),
       args: (arg, t) => [
+        arg(collectionIds, t.Dictionary({ key: t.String, value: t.Array(t.UInt64) })),
         arg(publicPaths, t.Dictionary({ key: t.String, value: t.Path })),
         arg(storagePaths, t.Dictionary({ key: t.String, value: t.Path })),
-        arg(collectionIds, t.Dictionary({ key: t.String, value: t.Array(t.UInt64) })),
         arg(vaultAmounts, t.Dictionary({ key: t.String, value: t.UFix64 })),
         arg(get(message), t.Optional(t.String)),
         arg([], t.Dictionary({ key: t.String, value: t.String })),
@@ -333,6 +331,33 @@ export const discover = async (address) => {
   }
 };
 
+export const newDiscover = async (address) => {
+  if (!address) return {};
+
+  const vaults = contractData.Token;
+  const vaultInfos = [];
+  for (const vaultName in vaults) {
+    const vaultInfo = vaults[vaultName];
+    vaultInfos.push({ key: vaultName, value: vaultInfo.balancePath });
+  }
+
+  try {
+    const response = await fcl.query({
+      cadence: replaceWithProperValues(newDiscoverScript),
+      args: (arg, t) => [
+        arg(address, t.Address),
+        arg(vaultInfos, t.Dictionary({ key: t.String, value: t.String }))
+      ],
+    });
+
+    console.log(response);
+
+    return response;
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 export const readGeefts = async (address) => {
 
   try {
@@ -381,3 +406,19 @@ export const areSetup = async (address) => {
     console.log(e);
   }
 };
+
+export const getImports = async (contractNames) => {
+  try {
+    const response = await fcl.query({
+      cadence: replaceWithProperValues(getImportsScript),
+      args: (arg, t) => [
+        arg(contractNames, t.Array(t.String))
+      ],
+    });
+
+    console.log(response);
+    return response;
+  } catch (e) {
+    console.log(e);
+  }
+}

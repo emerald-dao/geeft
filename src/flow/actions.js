@@ -12,7 +12,6 @@ import { contractData } from './contractData';
 ///////////////
 // Scripts
 import discoverScript from "./scripts/discover.cdc?raw";
-import newDiscoverScript from "./scripts/new_discover.cdc?raw";
 import readGeeftsScript from "./scripts/read_geefts.cdc?raw";
 import readGeeftInfoScript from "./scripts/geeft_info.cdc?raw";
 import areSetupScript from "./scripts/are_setup.cdc?raw";
@@ -105,7 +104,7 @@ export const setup = async () => {
     console.log({ transactionId });
 
     txId.set(transactionId);
-    
+
     fcl.tx(transactionId).subscribe((res) => {
       transactionStatus.set(res.status);
       console.log(res);
@@ -132,7 +131,6 @@ export const createGeeft = async () => {
   let publicPaths = [];
 
   const selectedNFTsStore = get(selectedNFTs);
-  console.log(selectedNFTsStore)
   let collectionIds = [];
   let collectionAdditions = '';
   const importInfoForCollections = await getImports(Object.keys(selectedNFTsStore));
@@ -299,12 +297,6 @@ export const openGeeft = async (geeft) => {
 
 export const discover = async (address) => {
   if (!address) return {};
-  const collections = contractData.NFT;
-  const collectionInfos = [];
-  for (const collectionName in collections) {
-    const collectionInfo = collections[collectionName];
-    collectionInfos.push({ key: collectionName, value: [collectionInfo.publicPath, collectionInfo.storagePath] });
-  }
 
   const vaults = contractData.Token;
   const vaultInfos = [];
@@ -316,34 +308,6 @@ export const discover = async (address) => {
   try {
     const response = await fcl.query({
       cadence: replaceWithProperValues(discoverScript),
-      args: (arg, t) => [
-        arg(address, t.Address),
-        arg(collectionInfos, t.Dictionary({ key: t.String, value: t.Array(t.String) })),
-        arg(vaultInfos, t.Dictionary({ key: t.String, value: t.String }))
-      ],
-    });
-
-    console.log(response);
-
-    return response;
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-export const newDiscover = async (address) => {
-  if (!address) return {};
-
-  const vaults = contractData.Token;
-  const vaultInfos = [];
-  for (const vaultName in vaults) {
-    const vaultInfo = vaults[vaultName];
-    vaultInfos.push({ key: vaultName, value: vaultInfo.balancePath });
-  }
-
-  try {
-    const response = await fcl.query({
-      cadence: replaceWithProperValues(newDiscoverScript),
       args: (arg, t) => [
         arg(address, t.Address),
         arg(vaultInfos, t.Dictionary({ key: t.String, value: t.String }))

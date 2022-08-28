@@ -90,6 +90,16 @@ export const contractData = {
         mainnet: "0x7620acf6d7f2468a"
       }
     },
+    Bl0xPack: {
+      storagePath: "Bl0xPackCollection",
+      publicPath: "Bl0xPackCollection",
+      collectionPublic: "CollectionPublic",
+      networks: {
+        emulator: "",
+        testnet: "",
+        mainnet: "0x7620acf6d7f2468a"
+      }
+    },
     BarterYardClubWerewolf: {
       storagePath: "BarterYardClubWerewolfCollection",
       publicPath: "BarterYardClubWerewolfCollection",
